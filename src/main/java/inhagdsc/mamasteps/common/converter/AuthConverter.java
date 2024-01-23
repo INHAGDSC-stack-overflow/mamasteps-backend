@@ -3,7 +3,9 @@ package inhagdsc.mamasteps.common.converter;
 import inhagdsc.mamasteps.auth.dto.LoginReponse;
 import inhagdsc.mamasteps.auth.dto.SignupResponse;
 import inhagdsc.mamasteps.user.entity.User;
+import lombok.NoArgsConstructor;
 
+@NoArgsConstructor(access = lombok.AccessLevel.PRIVATE)
 public class AuthConverter {
 
     public static SignupResponse toSignupResponse(User user, String accessToken, String refreshToken) {
