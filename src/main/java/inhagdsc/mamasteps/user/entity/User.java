@@ -1,10 +1,8 @@
 package inhagdsc.mamasteps.user.entity;
 
 import inhagdsc.mamasteps.common.BaseTimeEntity;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import inhagdsc.mamasteps.user.entity.enums.Role;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -29,9 +27,12 @@ public class User extends BaseTimeEntity implements UserDetails {
     private String email;
     private String password;
 
+    @Enumerated(EnumType.STRING)
+    private Role role;
+
         @Override
         public Collection<? extends GrantedAuthority> getAuthorities() {
-            return null;
+            return role.getAuthorities();
         }
 
 
