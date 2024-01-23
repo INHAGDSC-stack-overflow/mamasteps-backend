@@ -7,6 +7,7 @@ import inhagdsc.mamasteps.auth.dto.SignupRequest;
 import inhagdsc.mamasteps.auth.dto.SignupResponse;
 import inhagdsc.mamasteps.auth.jwt.JwtProvider;
 import inhagdsc.mamasteps.auth.redis.RedisProvider;
+import inhagdsc.mamasteps.common.converter.AuthConverter;
 import inhagdsc.mamasteps.common.exception.handler.UserHandler;
 import inhagdsc.mamasteps.user.entity.User;
 import inhagdsc.mamasteps.user.entity.enums.Role;
@@ -51,11 +52,7 @@ public class AuthServiceImpl implements AuthService {
     String accessToken = jwtProvider.generateToken(user);
     String refreshToken = jwtProvider.generateRefreshToken(user);
     saveUserToken(savedUser, refreshToken);
-    return SignupResponse.builder()
-            .userId(savedUser.getId())
-            .accessToken(accessToken)
-            .refreshToken(refreshToken)
-            .build();
+    return AuthConverter.toSignupResponse(user, accessToken, refreshToken);
   }
 
   @Override
@@ -69,11 +66,7 @@ public class AuthServiceImpl implements AuthService {
     String refreshToken = jwtProvider.generateRefreshToken(user);
     revokeAllUserTokens(user);
     saveUserToken(user, refreshToken);
-    return LoginReponse.builder()
-            .userId(user.getId())
-            .accessToken(accessToken)
-            .refreshToken(refreshToken)
-            .build();
+    return AuthConverter.toLoginResponse(user, accessToken, refreshToken);
   }
 
   private void saveUserToken(User user, String refreshToken) {
