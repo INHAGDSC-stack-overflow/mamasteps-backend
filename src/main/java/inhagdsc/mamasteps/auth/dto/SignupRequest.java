@@ -22,7 +22,6 @@ public class SignupRequest {
   private Integer age; // 나이
   private LocalDateTime pregnancyStartDate; // 임신 시작일
   private String guardianPhoneNumber; // 보호자 전화번호
-  private String profileImageUrl; // 프로필 이미지
   private ActivityLevel activityLevel; // 활동량
 
 }

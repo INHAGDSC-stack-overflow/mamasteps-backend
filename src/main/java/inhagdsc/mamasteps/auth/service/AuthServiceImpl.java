@@ -9,6 +9,7 @@ import inhagdsc.mamasteps.auth.jwt.JwtProvider;
 import inhagdsc.mamasteps.auth.redis.RedisProvider;
 import inhagdsc.mamasteps.common.converter.AuthConverter;
 import inhagdsc.mamasteps.common.exception.handler.UserHandler;
+import inhagdsc.mamasteps.common.stroge.FileProvider;
 import inhagdsc.mamasteps.user.entity.User;
 import inhagdsc.mamasteps.user.entity.enums.Role;
 import inhagdsc.mamasteps.user.repository.UserRepository;
@@ -21,6 +22,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 
@@ -39,24 +41,28 @@ public class AuthServiceImpl implements AuthService {
   private final AuthenticationManager authenticationManager;
   private final JwtProvider jwtProvider;
   private final RedisProvider redisProvider;
+  private final FileProvider fileProvider;
 
   @Override
   @Transactional
-  public SignupResponse signup(SignupRequest request) {
+  public SignupResponse signup(MultipartFile profileImage, SignupRequest request) {
+    String prifleImageUrl = fileProvider.fileUpload(profileImage, "profile");
     User user = User.builder()
             .email(request.getEmail())
             .password(passwordEncoder.encode(request.getPassword()))
             .name(request.getName())
             .age(request.getAge())
             .pregnancyStartDate(request.getPregnancyStartDate())
-            .profileImageUrl(request.getProfileImageUrl())
+            .guardianPhoneNumber(request.getGuardianPhoneNumber())
+            .activityLevel(request.getActivityLevel())
+            .profileImageUrl(prifleImageUrl)
             .role(Role.USER)
             .build();
     User savedUser = userRepository.save(user);
     String accessToken = jwtProvider.generateToken(user);
     String refreshToken = jwtProvider.generateRefreshToken(user);
     saveUserToken(savedUser, refreshToken);
-    return AuthConverter.toSignupResponse(user, accessToken, refreshToken);
+    return AuthConverter.toSignupResponse(savedUser, accessToken, refreshToken);
   }
 
   @Override
