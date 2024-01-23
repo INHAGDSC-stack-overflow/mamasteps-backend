@@ -15,7 +15,7 @@ import java.util.UUID;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class FileProvider {
+public class StorageProvider {
 
     private final StorageProperties storageProperties;
 

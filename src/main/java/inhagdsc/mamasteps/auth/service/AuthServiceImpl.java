@@ -1,12 +1,11 @@
 package inhagdsc.mamasteps.auth.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import inhagdsc.mamasteps.auth.dto.*;
 import inhagdsc.mamasteps.auth.jwt.JwtProvider;
 import inhagdsc.mamasteps.auth.redis.RedisProvider;
 import inhagdsc.mamasteps.common.converter.AuthConverter;
 import inhagdsc.mamasteps.common.exception.handler.UserHandler;
-import inhagdsc.mamasteps.common.stroge.FileProvider;
+import inhagdsc.mamasteps.common.stroge.StorageProvider;
 import inhagdsc.mamasteps.user.entity.User;
 import inhagdsc.mamasteps.user.entity.enums.Role;
 import inhagdsc.mamasteps.user.repository.UserRepository;
@@ -38,12 +37,12 @@ public class AuthServiceImpl implements AuthService {
   private final AuthenticationManager authenticationManager;
   private final JwtProvider jwtProvider;
   private final RedisProvider redisProvider;
-  private final FileProvider fileProvider;
+  private final StorageProvider storageProvider;
 
   @Override
   @Transactional
   public SignupResponse signup(MultipartFile profileImage, SignupRequest request) {
-    String prifleImageUrl = fileProvider.fileUpload(profileImage, "profile");
+    String prifleImageUrl = storageProvider.fileUpload(profileImage, "profile");
     User user = User.builder()
             .email(request.getEmail())
             .password(passwordEncoder.encode(request.getPassword()))
