@@ -1,10 +1,7 @@
 package inhagdsc.mamasteps.auth.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import inhagdsc.mamasteps.auth.dto.LoginReponse;
-import inhagdsc.mamasteps.auth.dto.LoginRequest;
-import inhagdsc.mamasteps.auth.dto.SignupRequest;
-import inhagdsc.mamasteps.auth.dto.SignupResponse;
+import inhagdsc.mamasteps.auth.dto.*;
 import inhagdsc.mamasteps.auth.jwt.JwtProvider;
 import inhagdsc.mamasteps.auth.redis.RedisProvider;
 import inhagdsc.mamasteps.common.converter.AuthConverter;
@@ -92,13 +89,12 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   @Transactional
-  public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
+  public RefreshResponse refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
     final String authHeader = request.getHeader(HEADER_AUTHORIZATION);
     final String refreshToken;
     final String userEmail;
     if (authHeader == null ||!authHeader.startsWith(TOKEN_PREFIX))
-      return;
-
+      return null;
     refreshToken = authHeader.substring(7);
     userEmail = jwtProvider.extractUsername(refreshToken);
     if (userEmail != null) {
@@ -106,13 +102,9 @@ public class AuthServiceImpl implements AuthService {
               .orElseThrow(() -> new UserHandler(USER_NOT_FOUND));
       if (jwtProvider.isTokenValid(refreshToken, user)) {
         String accessToken = jwtProvider.generateToken(user);
-        SignupResponse signupResponse = SignupResponse.builder()
-                .userId(user.getId())
-                .accessToken(accessToken)
-                .refreshToken(null)
-                .build();
-        new ObjectMapper().writeValue(response.getOutputStream(), signupResponse);
+        return AuthConverter.toRefreshResponse(user, accessToken);
       }
     }
+    return null;
   }
 }

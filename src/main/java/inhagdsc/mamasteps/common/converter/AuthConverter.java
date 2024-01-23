@@ -1,6 +1,7 @@
 package inhagdsc.mamasteps.common.converter;
 
 import inhagdsc.mamasteps.auth.dto.LoginReponse;
+import inhagdsc.mamasteps.auth.dto.RefreshResponse;
 import inhagdsc.mamasteps.auth.dto.SignupResponse;
 import inhagdsc.mamasteps.user.entity.User;
 import inhagdsc.mamasteps.user.entity.enums.ActivityLevel;
@@ -30,6 +31,13 @@ public class AuthConverter {
                 .userId(user.getId())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
+                .build();
+    }
+
+    public static RefreshResponse toRefreshResponse(User user, String accessToken) {
+        return RefreshResponse.builder()
+                .userId(user.getId())
+                .accessToken(accessToken)
                 .build();
     }
 }
