@@ -11,7 +11,7 @@ import java.io.IOException;
 
 public interface AuthService {
 
-    public SignupResponse signup(SignupRequest req);
-    public LoginReponse login(LoginRequest req);
+    public SignupResponse signup(SignupRequest request);
+    public LoginReponse login(LoginRequest request);
     public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException;
 }
