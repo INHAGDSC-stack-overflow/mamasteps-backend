@@ -20,8 +20,8 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/me")
-    public ApiResponse<UserResponse> getMyInfo(@AuthenticationPrincipal User user) {
-        return ApiResponse.onSuccess(userService.getUserInfo(user.getId()));
+    public ApiResponse<UserResponse> getMyInfo(@AuthenticationPrincipal User user) { //로그인 시 유저 정보 가져옴
+        return ApiResponse.onSuccess(userService.getUserInfo(user.getId())); //따라서 아이디만 넘긴 다음 서비스에서 디비 다시 조회함
     }
 
     @PatchMapping("/password")

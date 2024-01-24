@@ -10,12 +10,10 @@ import inhagdsc.mamasteps.user.entity.User;
 import inhagdsc.mamasteps.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.security.Principal;
 
 import static inhagdsc.mamasteps.common.code.status.ErrorStatus.*;
 
@@ -53,8 +51,6 @@ public class UsesrServiceImpl implements UserService {
         log.info("비밀번호 변경 완료 : {}", user.getPassword());
         // 새 비밀번호 저장인데 가독성을 위해 작성함. 작성하지 않아도 무방
         userRepository.save(user);
-        return ChangePasswordResponse.builder()
-                .newPassword(user.getPassword())
-                .build();
+        return UserConverter.toChangePasswordResponse(user);
     }
 }

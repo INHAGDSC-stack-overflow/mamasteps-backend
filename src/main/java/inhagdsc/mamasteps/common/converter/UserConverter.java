@@ -1,5 +1,6 @@
 package inhagdsc.mamasteps.common.converter;
 
+import inhagdsc.mamasteps.user.dto.ChangePasswordResponse;
 import inhagdsc.mamasteps.user.dto.UserResponse;
 import inhagdsc.mamasteps.user.entity.User;
 import lombok.NoArgsConstructor;
@@ -16,6 +17,12 @@ public class UserConverter {
                 .pregnancyStartDate(user.getPregnancyStartDate())
                 .guardianPhoneNumber(user.getGuardianPhoneNumber())
                 .activityLevel(user.getActivityLevel())
+                .build();
+    }
+
+    public static ChangePasswordResponse toChangePasswordResponse(User user) {
+        return ChangePasswordResponse.builder()
+                .newPassword(user.getPassword())
                 .build();
     }
 }
