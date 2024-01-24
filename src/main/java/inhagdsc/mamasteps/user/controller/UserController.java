@@ -24,7 +24,7 @@ public class UserController {
         return ApiResponse.onSuccess(userService.getUserInfo(user.getId()));
     }
 
-    @PatchMapping
+    @PatchMapping("/password")
     public ApiResponse<ChangePasswordResponse> changePassword(@RequestBody ChangePasswordRequest request, @AuthenticationPrincipal User user) {
         return ApiResponse.onSuccess(userService.changePassword(request, user));
     }
