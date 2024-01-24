@@ -1,7 +1,6 @@
 package inhagdsc.mamasteps.user.service;
 
 import inhagdsc.mamasteps.user.dto.*;
-import inhagdsc.mamasteps.user.entity.User;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 

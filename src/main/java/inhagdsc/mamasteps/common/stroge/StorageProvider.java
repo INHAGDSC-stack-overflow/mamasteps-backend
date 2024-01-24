@@ -1,9 +1,6 @@
 package inhagdsc.mamasteps.common.stroge;
 
-import com.google.cloud.storage.Blob;
-import com.google.cloud.storage.BlobInfo;
-import com.google.cloud.storage.Storage;
-import com.google.cloud.storage.StorageOptions;
+import com.google.cloud.storage.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -41,8 +38,15 @@ public class StorageProvider {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
         return url;
+    }
+
+    public boolean deleteFile(String fileName) {
+        log.info("deleteFile api 호출");
+        Storage storage = StorageOptions.newBuilder().setProjectId(storageProperties.getProjectId()).build().getService();
+        // 삭제할 Blob의 정보
+        BlobId blobId = BlobId.of(storageProperties.getBucketName(), fileName);
+        return storage.delete(blobId);
 
 
     }

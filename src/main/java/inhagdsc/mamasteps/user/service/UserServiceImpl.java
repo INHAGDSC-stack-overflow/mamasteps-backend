@@ -22,7 +22,7 @@ import static inhagdsc.mamasteps.common.stroge.StorageProvider.PROFILE;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 @Slf4j
-public class UsesrServiceImpl implements UserService {
+public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -62,6 +62,7 @@ public class UsesrServiceImpl implements UserService {
     public ChangeProfileResponse updateProfile(Long userId, MultipartFile profileImage) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserHandler(USER_NOT_FOUND));
+        deleteFile(user);
         user.updateProfileImageUrl(storageProvider.fileUpload(profileImage, PROFILE));
         return UserConverter.toChangeProfileResponse(user);
     }
@@ -71,5 +72,15 @@ public class UsesrServiceImpl implements UserService {
             throw new UserHandler(PASSWORD_NOT_MATCH);// 만약 현재 비밀번호가 맞지 않다면 예외
         if (!request.getNewPassword().equals(request.getConfirmationPassword()))
             throw new UserHandler(PASSWORD_NOT_MATCH_CONFIRM); // 만약 새로운 비밀번호와 확인 비밀번호가 일치하지 않다면 예외
+    }
+
+    //이거 예외처리 어떻게할지 고민해봐야할듯
+    private void deleteFile(User user) {
+        boolean deleteFile = storageProvider.deleteFile(user.getProfileImageUrl());
+        if(deleteFile) {
+            log.info("기존 프로필 이미지 삭제 완료");
+        } else {
+            log.info("기존 프로필 이미지 삭제 실패");
+        }
     }
 }
