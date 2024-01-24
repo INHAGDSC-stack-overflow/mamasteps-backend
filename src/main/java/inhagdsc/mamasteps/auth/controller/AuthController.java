@@ -1,21 +1,15 @@
 package inhagdsc.mamasteps.auth.controller;
 
-import inhagdsc.mamasteps.auth.dto.LoginReponse;
-import inhagdsc.mamasteps.auth.dto.LoginRequest;
-import inhagdsc.mamasteps.auth.dto.SignupRequest;
-import inhagdsc.mamasteps.auth.dto.SignupResponse;
+import inhagdsc.mamasteps.auth.dto.*;
 import inhagdsc.mamasteps.auth.service.AuthService;
+import inhagdsc.mamasteps.common.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -26,20 +20,21 @@ public class AuthController {
   private final AuthService authService;
 
   @PostMapping("/signup")
-  public ResponseEntity<SignupResponse> signup(@RequestBody SignupRequest request) {
+  public ApiResponse<SignupResponse> signup(@RequestPart("profileImage") MultipartFile profileImage,
+                                            @RequestPart("request") SignupRequest request) {
     log.info("signup 호출 {}", request.getEmail());
-    return ResponseEntity.ok(authService.signup(request));
+    return ApiResponse.onSuccess(authService.signup(profileImage, request));
   }
 
   @PostMapping("/login")
-  public ResponseEntity<LoginReponse> login(@RequestBody LoginRequest request) {
+  public ApiResponse<LoginReponse> login(@RequestBody LoginRequest request) {
     log.info("login 호출 {}", request.getEmail());
-    return ResponseEntity.ok(authService.login(request));
+    return ApiResponse.onSuccess(authService.login(request));
   }
 
   @PostMapping("/refresh-token")
-  public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    authService.refreshToken(request, response);
+  public ApiResponse<RefreshResponse> refreshToken(HttpServletRequest request, HttpServletResponse response)  {
+    return ApiResponse.onSuccess(authService.refreshToken(request, response));
   }
 
 
