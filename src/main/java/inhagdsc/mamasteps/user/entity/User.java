@@ -80,5 +80,11 @@ public class User extends BaseTimeEntity implements UserDetails {
             this.password = password;
         }
 
+    public void updateInfo(String name, Integer age, LocalDateTime pregnancyStartDate, ActivityLevel activityLevel) {
+        this.name = name;
+        this.age = age;
+        this.pregnancyStartDate = pregnancyStartDate;
+        this.activityLevel = activityLevel;
+    }
 }
 

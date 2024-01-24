@@ -6,6 +6,7 @@ import inhagdsc.mamasteps.common.exception.handler.UserHandler;
 import inhagdsc.mamasteps.user.dto.ChangePasswordRequest;
 import inhagdsc.mamasteps.user.dto.ChangePasswordResponse;
 import inhagdsc.mamasteps.user.dto.UserResponse;
+import inhagdsc.mamasteps.user.dto.UserUpdateRequest;
 import inhagdsc.mamasteps.user.entity.User;
 import inhagdsc.mamasteps.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,16 @@ public class UsesrServiceImpl implements UserService {
     public UserResponse getUserInfo(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserHandler(USER_NOT_FOUND));
+        return UserConverter.toUserResponse(user);
+    }
+
+    @Override
+    @Transactional
+    public UserResponse updateUserInfo(Long userId, UserUpdateRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        user.updateInfo(request.getName(), request.getAge(), request.getPregnancyStartDate(), request.getActivityLevel() );
         return UserConverter.toUserResponse(user);
     }
 

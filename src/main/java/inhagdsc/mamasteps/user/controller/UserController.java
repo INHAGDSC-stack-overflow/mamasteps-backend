@@ -4,6 +4,7 @@ import inhagdsc.mamasteps.common.ApiResponse;
 import inhagdsc.mamasteps.user.dto.ChangePasswordRequest;
 import inhagdsc.mamasteps.user.dto.ChangePasswordResponse;
 import inhagdsc.mamasteps.user.dto.UserResponse;
+import inhagdsc.mamasteps.user.dto.UserUpdateRequest;
 import inhagdsc.mamasteps.user.entity.User;
 import inhagdsc.mamasteps.user.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,11 @@ public class UserController {
     @GetMapping("/me")
     public ApiResponse<UserResponse> getMyInfo(@AuthenticationPrincipal User user) { //로그인 시 유저 정보 가져옴
         return ApiResponse.onSuccess(userService.getUserInfo(user.getId())); //따라서 아이디만 넘긴 다음 서비스에서 디비 다시 조회함
+    }
+
+    @PatchMapping("/me")
+    public UserResponse updateMyInfo(@RequestBody UserUpdateRequest request, @AuthenticationPrincipal User user) {
+        return userService.updateUserInfo(user.getId(), request);
     }
 
     @PatchMapping("/password")
