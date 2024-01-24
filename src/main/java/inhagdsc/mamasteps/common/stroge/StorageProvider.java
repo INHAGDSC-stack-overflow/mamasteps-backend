@@ -16,7 +16,7 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 public class StorageProvider {
-
+    public static final String PROFILE  = "profile";
     private final StorageProperties storageProperties;
 
     public String fileUpload(MultipartFile multipartFile, String folderName)  {

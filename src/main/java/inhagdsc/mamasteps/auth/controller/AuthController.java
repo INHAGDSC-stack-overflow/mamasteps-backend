@@ -7,11 +7,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -35,7 +33,7 @@ public class AuthController {
   }
 
   @PostMapping("/refresh-token")
-  public ApiResponse<RefreshResponse> refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
+  public ApiResponse<RefreshResponse> refreshToken(HttpServletRequest request, HttpServletResponse response)  {
     return ApiResponse.onSuccess(authService.refreshToken(request, response));
   }
 

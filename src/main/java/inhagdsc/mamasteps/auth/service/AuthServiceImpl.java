@@ -20,11 +20,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 
 import static inhagdsc.mamasteps.auth.jwt.JwtProvider.HEADER_AUTHORIZATION;
 import static inhagdsc.mamasteps.auth.jwt.JwtProvider.TOKEN_PREFIX;
 import static inhagdsc.mamasteps.common.code.status.ErrorStatus.USER_NOT_FOUND;
+import static inhagdsc.mamasteps.common.stroge.StorageProvider.PROFILE;
 
 @Service
 @RequiredArgsConstructor
@@ -42,7 +42,7 @@ public class AuthServiceImpl implements AuthService {
   @Override
   @Transactional
   public SignupResponse signup(MultipartFile profileImage, SignupRequest request) {
-    String prifleImageUrl = storageProvider.fileUpload(profileImage, "profile");
+    String prifleImageUrl = storageProvider.fileUpload(profileImage, PROFILE);
     User user = User.builder()
             .email(request.getEmail())
             .password(passwordEncoder.encode(request.getPassword()))
@@ -88,7 +88,7 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   @Transactional
-  public RefreshResponse refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
+  public RefreshResponse refreshToken(HttpServletRequest request, HttpServletResponse response)  {
     final String authHeader = request.getHeader(HEADER_AUTHORIZATION);
     final String refreshToken;
     final String userEmail;

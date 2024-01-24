@@ -1,6 +1,7 @@
 package inhagdsc.mamasteps.common.converter;
 
 import inhagdsc.mamasteps.user.dto.ChangePasswordResponse;
+import inhagdsc.mamasteps.user.dto.ChangeProfileResponse;
 import inhagdsc.mamasteps.user.dto.UserResponse;
 import inhagdsc.mamasteps.user.entity.User;
 import lombok.NoArgsConstructor;
@@ -23,6 +24,12 @@ public class UserConverter {
     public static ChangePasswordResponse toChangePasswordResponse(User user) {
         return ChangePasswordResponse.builder()
                 .newPassword(user.getPassword())
+                .build();
+    }
+
+    public static ChangeProfileResponse toChangeProfileResponse(User user) {
+        return ChangeProfileResponse.builder()
+                .newProfileImageUrl(user.getProfileImageUrl())
                 .build();
     }
 }

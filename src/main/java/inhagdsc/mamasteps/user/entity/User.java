@@ -86,5 +86,9 @@ public class User extends BaseTimeEntity implements UserDetails {
         this.pregnancyStartDate = pregnancyStartDate;
         this.activityLevel = activityLevel;
     }
+
+    public void updateProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
+    }
 }
 
