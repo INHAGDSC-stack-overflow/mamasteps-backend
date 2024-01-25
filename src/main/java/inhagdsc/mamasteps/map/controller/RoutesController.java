@@ -1,5 +1,6 @@
 package inhagdsc.mamasteps.map.controller;
 
+import inhagdsc.mamasteps.common.ApiResponse;
 import inhagdsc.mamasteps.map.domain.RouteRequestDto;
 import inhagdsc.mamasteps.map.service.RoutesService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +20,7 @@ public class RoutesController {
     }
 
     @PostMapping("/computeRoutes")
-    public Mono<String> getRoutes(@RequestBody RouteRequestDto routeRequestDto) {
-        return routesService.computeRoutes(routeRequestDto);
+    public ApiResponse<Mono<String>> getRoutes(@RequestBody RouteRequestDto routeRequestDto) {
+        return ApiResponse.onSuccess(routesService.computeRoutes(routeRequestDto));
     }
 }
