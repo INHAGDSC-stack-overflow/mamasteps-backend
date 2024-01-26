@@ -5,14 +5,17 @@ import inhagdsc.mamasteps.common.code.status.SuccessStatus;
 import inhagdsc.mamasteps.map.domain.RouteRequestDto;
 import inhagdsc.mamasteps.map.service.RoutesService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
 import static inhagdsc.mamasteps.common.code.status.SuccessStatus.*;
 
 @RestController
+@RequestMapping("/api/v1/routes")
 public class RoutesController {
 
     private final RoutesService routesService;
@@ -23,7 +26,8 @@ public class RoutesController {
     }
 
     @PostMapping("/computeRoutes")
-    public ApiResponse<Mono<String>> getRoutes(@RequestBody RouteRequestDto routeRequestDto) {
-        return ApiResponse.onSuccess(CREATED, routesService.computeRoutes(routeRequestDto));
+    public String getRoutes(@RequestBody RouteRequestDto routeRequestDto) {
+        String response = routesService.computeRoutes(routeRequestDto);
+        return response;
     }
 }

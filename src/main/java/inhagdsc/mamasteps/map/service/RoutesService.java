@@ -5,6 +5,6 @@ import inhagdsc.mamasteps.map.domain.RouteRequestDto;
 import reactor.core.publisher.Mono;
 
 public interface RoutesService {
-    public Mono<String> computeRoutes(RouteRequestDto routeRequestDto);
+    public String computeRoutes(RouteRequestDto routeRequestDto);
 }
 

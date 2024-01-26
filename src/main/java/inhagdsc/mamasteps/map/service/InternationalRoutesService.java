@@ -26,19 +26,25 @@ public class InternationalRoutesService implements RoutesService {
     }
 
     @Override
-    public Mono<String> computeRoutes(RouteRequestDto routeRequestDto) {
+    public String computeRoutes(RouteRequestDto routeRequestDto) {
 
         String requestBody = buildRequestBody(routeRequestDto);
 
-        return postAPIRequest(requestBody)
-                .flatMap(response -> {
-                    try {
-                        ObjectNode parsedResponse = parseApiResponse(response);
-                        return Mono.just(encodePolyline(parsedResponse).toString());
-                    } catch (IOException e) {
-                        return Mono.error(new RuntimeException(e));
-                    }
-                });
+        try {
+            return encodePolyline(parseApiResponse(postAPIRequest(requestBody))).toString();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+//        return postAPIRequest(requestBody)
+//                .flatMap(response -> {
+//                    try {
+//                        ObjectNode parsedResponse = parseApiResponse(response);
+//                        return Mono.just(encodePolyline(parsedResponse).toString());
+//                    } catch (IOException e) {
+//                        return Mono.error(new RuntimeException(e));
+//                    }
+//                });
 
     }
 
@@ -52,7 +58,7 @@ public class InternationalRoutesService implements RoutesService {
         return json.toString();
     }
 
-    private Mono<String> postAPIRequest(String requestBody) {
+    private String postAPIRequest(String requestBody) {
         return webClient.post()
                 .uri("/directions/v2:computeRoutes")
                 .header("Content-Type", "application/json")
@@ -60,7 +66,8 @@ public class InternationalRoutesService implements RoutesService {
                 .header("X-Goog-FieldMask", "routes.duration,routes.distanceMeters,routes.legs")
                 .body(Mono.just(requestBody), String.class)
                 .retrieve()
-                .bodyToMono(String.class);
+                .bodyToMono(String.class)
+                .block();
     }
 
     private ObjectNode parseApiResponse(String apiResponse) throws IOException {

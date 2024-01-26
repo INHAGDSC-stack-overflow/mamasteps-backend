@@ -26,18 +26,14 @@ public class KoreaRoutesService implements RoutesService{
         this.webClient = webClientBuilder.baseUrl("https://apis.openapi.sk.com").build();
     }
     @Override
-    public Mono<String> computeRoutes(RouteRequestDto routeRequestDto) {
+    public String computeRoutes(RouteRequestDto routeRequestDto) {
         MultiValueMap<String, String> requestBody = buildRequestBody(routeRequestDto);
 
-        return postAPIRequest(requestBody)
-                .flatMap(response -> {
-                    try {
-                        ObjectNode parsedResponse = parseApiResponse(response);
-                        return Mono.just(encodePolyline(parsedResponse).toString());
-                    } catch (IOException e) {
-                        return Mono.error(new RuntimeException(e));
-                    }
-                });
+        try {
+            return encodePolyline(parseApiResponse(postAPIRequest(requestBody))).toString();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private MultiValueMap<String, String> buildRequestBody(RouteRequestDto routeRequestDto) {
@@ -48,7 +44,7 @@ public class KoreaRoutesService implements RoutesService{
         return formData;
     }
 
-    private Mono<String> postAPIRequest(MultiValueMap<String, String> requestBody) {
+    private String postAPIRequest(MultiValueMap<String, String> requestBody) {
         return webClient.post()
                 .uri("/tmap/routes/pedestrian?version=1")
                 .header("Content-Type", "application/x-www-form-urlencoded")
@@ -56,7 +52,8 @@ public class KoreaRoutesService implements RoutesService{
                 .header("Accept-Language", "ko")
                 .bodyValue(requestBody)
                 .retrieve()
-                .bodyToMono(String.class);
+                .bodyToMono(String.class)
+                .block();
     }
 
     private ObjectNode parseApiResponse(String apiResponse) throws JsonProcessingException {
