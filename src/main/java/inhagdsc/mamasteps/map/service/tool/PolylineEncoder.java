@@ -1,4 +1,4 @@
-package inhagdsc.mamasteps.map.service;
+package inhagdsc.mamasteps.map.service.tool;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import inhagdsc.mamasteps.map.domain.LatLng;
