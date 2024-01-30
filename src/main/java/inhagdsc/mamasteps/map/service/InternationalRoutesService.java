@@ -1,11 +1,15 @@
 package inhagdsc.mamasteps.map.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import inhagdsc.mamasteps.map.domain.LatLng;
 import inhagdsc.mamasteps.map.domain.RouteRequestDto;
 import inhagdsc.mamasteps.map.service.tool.PolylineEncoder;
+import inhagdsc.mamasteps.map.service.tool.waypoint.ExploratoryWaypointGenerator;
+import inhagdsc.mamasteps.map.service.tool.waypoint.WaypointGenerator;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
@@ -14,6 +18,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
+import java.util.List;
 
 @Service
 @Profile("international")
@@ -27,15 +32,31 @@ public class InternationalRoutesService implements RoutesService {
     }
 
     @Override
-    public String computeRoutes(RouteRequestDto routeRequestDto) {
+    public String computeRoutes(RouteRequestDto originRouteRequestDto) throws RuntimeException, JsonProcessingException {
+        WaypointGenerator waypointGenerator = new ExploratoryWaypointGenerator(originRouteRequestDto);
+        List<LatLng> createdWaypoints = waypointGenerator.getSurroundingWaypoints();
 
-        String requestBody = buildRequestBody(routeRequestDto);
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode result = mapper.createObjectNode();
+        ArrayNode polylinesArray = mapper.createArrayNode();
+        for (LatLng waypoint : createdWaypoints) {
+            RouteRequestDto routeRequestDto = new RouteRequestDto();
+            routeRequestDto.setTargetTime(originRouteRequestDto.getTargetTime());
+            routeRequestDto.setOrigin(originRouteRequestDto.getOrigin().clone());
+            routeRequestDto.setIntermediates(LatLng.deepCopyList(originRouteRequestDto.getIntermediates()));
+            routeRequestDto.getIntermediates().add(waypoint);
 
-        try {
-            return encodePolyline(parseApiResponse(postAPIRequest(requestBody))).toString();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            String requestBody = buildRequestBody(routeRequestDto);
+            try {
+                String polyline = encodePolyline(parseApiResponse(postAPIRequest(requestBody))).toString();
+                polylinesArray.add(polyline);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
+
+        result.set("polylines", polylinesArray);
+        return result.toString();
 
 //        return postAPIRequest(requestBody)
 //                .flatMap(response -> {
