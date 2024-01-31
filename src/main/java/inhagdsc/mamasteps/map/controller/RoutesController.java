@@ -32,5 +32,5 @@ public class RoutesController {
     public String getRoutes(@RequestBody RouteRequestDto routeRequestDto) throws IOException, JsonProcessingException {
         String response = routesService.computeRoutes(routeRequestDto);
         return response;
-    }
+
 }
