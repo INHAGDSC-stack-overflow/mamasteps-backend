@@ -1,6 +1,9 @@
 package inhagdsc.mamasteps.map.domain;
 
-public class LatLng {
+import java.util.ArrayList;
+import java.util.List;
+
+public class LatLng implements Cloneable {
     double latitude;
     double longitude;
 
@@ -23,5 +26,21 @@ public class LatLng {
 
     public void setLongitude(double longitude) {
         this.longitude = longitude;
+    }
+
+    public static <T extends LatLng> List<T> deepCopyList(List<T> originalList) {
+        List<T> copiedList = new ArrayList<>();
+        for (T item : originalList) {
+            copiedList.add((T) item.clone());
+        }
+        return copiedList;
+    }
+    @Override
+    public LatLng clone() {
+        try {
+            return (LatLng) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError();
+        }
     }
 }

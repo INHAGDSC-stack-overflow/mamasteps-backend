@@ -5,39 +5,67 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import inhagdsc.mamasteps.map.domain.LatLng;
 import inhagdsc.mamasteps.map.domain.RouteRequestDto;
+import inhagdsc.mamasteps.map.domain.RouteRequestEntity;
+import inhagdsc.mamasteps.map.service.tool.PolylineEncoder;
+import inhagdsc.mamasteps.map.service.tool.waypoint.WaypointGenerator;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
 import java.io.IOException;
+import java.util.List;
 
 @Service
 @Profile("korea")
-public class KoreaRoutesService implements RoutesService{
+public class KoreaRoutesService implements RoutesService {
     @Value("${TMAP_API_KEY}")
     private String apiKey;
     private final WebClient webClient;
+    private final WaypointGenerator waypointGenerator;
 
-    public KoreaRoutesService(WebClient.Builder webClientBuilder) {
+    @Autowired
+    public KoreaRoutesService(WebClient.Builder webClientBuilder, WaypointGenerator waypointGenerator) {
         this.webClient = webClientBuilder.baseUrl("https://apis.openapi.sk.com").build();
+        this.waypointGenerator = waypointGenerator;
     }
-    @Override
-    public Mono<String> computeRoutes(RouteRequestDto routeRequestDto) {
-        MultiValueMap<String, String> requestBody = buildRequestBody(routeRequestDto);
 
-        return postAPIRequest(requestBody)
-                .flatMap(response -> {
-                    try {
-                        ObjectNode parsedResponse = parseApiResponse(response);
-                        return Mono.just(encodePolyline(parsedResponse).toString());
-                    } catch (IOException e) {
-                        return Mono.error(new RuntimeException(e));
-                    }
-                });
+    @Override
+    public String computeRoutes(RouteRequestDto routeRequestDto) throws IOException {
+        RouteRequestEntity originRouteRequestEntity = routeRequestDto.toEntity();
+        waypointGenerator.setRouteRequestEntity(originRouteRequestEntity);
+        List<LatLng> createdWaypoints = waypointGenerator.getSurroundingWaypoints();
+
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode result = mapper.createObjectNode();
+        ArrayNode polylinesArray = mapper.createArrayNode();
+        for (LatLng waypoint : createdWaypoints) {
+            RouteRequestDto routeRequestEntity = new RouteRequestDto();
+            routeRequestEntity.setTargetTime(originRouteRequestEntity.getTargetTime());
+            routeRequestEntity.setOrigin(originRouteRequestEntity.getOrigin().clone());
+            routeRequestEntity.setIntermediates(LatLng.deepCopyList(originRouteRequestEntity.getIntermediates()));
+            routeRequestEntity.getIntermediates().add(waypoint);
+
+            MultiValueMap<String, String> requestBody = buildRequestBody(routeRequestEntity);
+            try {
+                String polyline = encodePolyline(parseApiResponse(postAPIRequest(requestBody))).toString();
+                polylinesArray.add(polyline);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        result.set("polylines", polylinesArray);
+
+//        MultiValueMap<String, String> requestBody = buildRequestBody(originRouteRequestDto);
+//        String apiResponse = postAPIRequest(requestBody);
+//        String result = encodePolyline(parseApiResponse(apiResponse)).toString();
+
+        return result.toString();
     }
 
     private MultiValueMap<String, String> buildRequestBody(RouteRequestDto routeRequestDto) {
@@ -48,7 +76,7 @@ public class KoreaRoutesService implements RoutesService{
         return formData;
     }
 
-    private Mono<String> postAPIRequest(MultiValueMap<String, String> requestBody) {
+    private String postAPIRequest(MultiValueMap<String, String> requestBody) {
         return webClient.post()
                 .uri("/tmap/routes/pedestrian?version=1")
                 .header("Content-Type", "application/x-www-form-urlencoded")
@@ -56,7 +84,8 @@ public class KoreaRoutesService implements RoutesService{
                 .header("Accept-Language", "ko")
                 .bodyValue(requestBody)
                 .retrieve()
-                .bodyToMono(String.class);
+                .bodyToMono(String.class)
+                .block();
     }
 
     private ObjectNode parseApiResponse(String apiResponse) throws JsonProcessingException {
@@ -97,7 +126,7 @@ public class KoreaRoutesService implements RoutesService{
 
     private ObjectNode encodePolyline(ObjectNode coordinates) throws IOException {
 
-        String polyline =  new PolylineEncoder().encode(coordinates.path("coordinates"));
+        String polyline = new PolylineEncoder().encode(coordinates.path("coordinates"));
 
         ObjectNode result = new ObjectMapper().createObjectNode();
         result.put("encodedPolyline", polyline);
