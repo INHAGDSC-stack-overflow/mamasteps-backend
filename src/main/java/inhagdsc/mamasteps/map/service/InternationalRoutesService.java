@@ -7,10 +7,11 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import inhagdsc.mamasteps.map.domain.LatLng;
 import inhagdsc.mamasteps.map.domain.RouteRequestDto;
+import inhagdsc.mamasteps.map.domain.RouteRequestEntity;
 import inhagdsc.mamasteps.map.service.tool.PolylineEncoder;
-import inhagdsc.mamasteps.map.service.tool.waypoint.ExploratoryWaypointGenerator;
 import inhagdsc.mamasteps.map.service.tool.waypoint.WaypointGenerator;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
@@ -26,27 +27,31 @@ public class InternationalRoutesService implements RoutesService {
     @Value("${GOOGLE_API_KEY}")
     private String apiKey;
     private final WebClient webClient;
+    private final WaypointGenerator waypointGenerator;
 
-    public InternationalRoutesService(WebClient.Builder webClientBuilder) {
+    @Autowired
+    public InternationalRoutesService(WebClient.Builder webClientBuilder, WaypointGenerator waypointGenerator) {
         this.webClient = webClientBuilder.baseUrl("https://routes.googleapis.com").build();
+        this.waypointGenerator = waypointGenerator;
     }
 
     @Override
-    public String computeRoutes(RouteRequestDto originRouteRequestDto) throws RuntimeException, JsonProcessingException {
-        WaypointGenerator waypointGenerator = new ExploratoryWaypointGenerator(originRouteRequestDto);
+    public String computeRoutes(RouteRequestDto routeRequestDto) throws RuntimeException, JsonProcessingException {
+        RouteRequestEntity originRouteRequestEntity = routeRequestDto.toEntity();
+        waypointGenerator.setRouteRequestEntity(originRouteRequestEntity);
         List<LatLng> createdWaypoints = waypointGenerator.getSurroundingWaypoints();
 
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode result = mapper.createObjectNode();
         ArrayNode polylinesArray = mapper.createArrayNode();
         for (LatLng waypoint : createdWaypoints) {
-            RouteRequestDto routeRequestDto = new RouteRequestDto();
-            routeRequestDto.setTargetTime(originRouteRequestDto.getTargetTime());
-            routeRequestDto.setOrigin(originRouteRequestDto.getOrigin().clone());
-            routeRequestDto.setIntermediates(LatLng.deepCopyList(originRouteRequestDto.getIntermediates()));
-            routeRequestDto.getIntermediates().add(waypoint);
+            RouteRequestDto routeRequestEntity = new RouteRequestDto();
+            routeRequestEntity.setTargetTime(originRouteRequestEntity.getTargetTime());
+            routeRequestEntity.setOrigin(originRouteRequestEntity.getOrigin().clone());
+            routeRequestEntity.setIntermediates(LatLng.deepCopyList(originRouteRequestEntity.getIntermediates()));
+            routeRequestEntity.getIntermediates().add(waypoint);
 
-            String requestBody = buildRequestBody(routeRequestDto);
+            String requestBody = buildRequestBody(routeRequestEntity);
             try {
                 String polyline = encodePolyline(parseApiResponse(postAPIRequest(requestBody))).toString();
                 polylinesArray.add(polyline);
@@ -128,7 +133,7 @@ public class InternationalRoutesService implements RoutesService {
 
     private ObjectNode encodePolyline(ObjectNode coordinates) throws IOException {
 
-        String polyline =  new PolylineEncoder().encode(coordinates.path("coordinates"));
+        String polyline = new PolylineEncoder().encode(coordinates.path("coordinates"));
 
         ObjectNode result = new ObjectMapper().createObjectNode();
         result.put("encodedPolyline", polyline);

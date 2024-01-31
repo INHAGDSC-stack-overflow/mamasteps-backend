@@ -1,50 +1,32 @@
 package inhagdsc.mamasteps.map.service.tool.waypoint;
 
 import inhagdsc.mamasteps.map.domain.LatLng;
-import inhagdsc.mamasteps.map.domain.RouteRequestDto;
+import inhagdsc.mamasteps.map.domain.RouteRequestEntity;
 import org.apache.commons.math3.analysis.UnivariateFunction;
 import org.apache.commons.math3.analysis.solvers.BrentSolver;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class MathematicalWaypointGenerator implements WaypointGenerator{
+@Component
+@Profile("mathematical")
+public class MathematicalWaypointGenerator implements WaypointGenerator {
     private int targetTime;
     private LatLng origin;
     private List<LatLng> intermediates;
 
-    public MathematicalWaypointGenerator(RouteRequestDto routeRequestDto) {
-        this.targetTime = routeRequestDto.getTargetTime();
-        this.origin = routeRequestDto.getOrigin();
-        this.intermediates = routeRequestDto.getIntermediates();
-    }
-
-    public int getTargetTime() {
-        return targetTime;
-    }
-
-    public void setTargetTime(int targetTime) {
-        this.targetTime = targetTime;
-    }
-
-    public LatLng getOrigin() {
-        return origin;
-    }
-
-    public void setOrigin(LatLng origin) {
-        this.origin = origin;
-    }
-
-    public List<LatLng> getIntermediates() {
-        return intermediates;
-    }
-
-    public void setIntermediates(List<LatLng> intermediates) {
-        this.intermediates = intermediates;
+    public void setRouteRequestEntity(RouteRequestEntity routeRequestEntity) {
+        this.targetTime = routeRequestEntity.getTargetTime();
+        this.origin = routeRequestEntity.getOrigin();
+        this.intermediates = routeRequestEntity.getIntermediates();
     }
 
     public List<LatLng> getSurroundingWaypoints() {
-        return getWholeWaypoints(getHalfWaypoints());
+        List<LatLng> halfWaypoints = getHalfWaypoints();
+        List<LatLng> wholeWaypoints = getWholeWaypoints(halfWaypoints);
+        return wholeWaypoints;
     }
 
     private List<LatLng> getWholeWaypoints(List<LatLng> halfWaypoints) {
@@ -114,7 +96,7 @@ public class MathematicalWaypointGenerator implements WaypointGenerator{
             double sumOfTerms = 0;
             for (int i = 0; i < waypoints.size() - 1; i++) {
                 LatLng waypoint1 = waypoints.get(i);
-                LatLng waypoint2 = waypoints.get(i+1);
+                LatLng waypoint2 = waypoints.get(i + 1);
                 double x1 = waypoint1.getLongitude();
                 double y1 = waypoint1.getLatitude();
                 double x2 = waypoint2.getLongitude();
@@ -142,7 +124,7 @@ public class MathematicalWaypointGenerator implements WaypointGenerator{
             double sumOfTerms = 0;
             for (int i = 0; i < waypoints.size() - 1; i++) {
                 LatLng waypoint1 = waypoints.get(i);
-                LatLng waypoint2 = waypoints.get(i+1);
+                LatLng waypoint2 = waypoints.get(i + 1);
                 double x1 = waypoint1.getLongitude();
                 double y1 = waypoint1.getLatitude();
                 double x2 = waypoint2.getLongitude();
@@ -163,7 +145,7 @@ public class MathematicalWaypointGenerator implements WaypointGenerator{
         );
     }
 
-    public double getMinX() {
+    private double getMinX() {
         double x_0 = origin.getLongitude();
         double y_0 = origin.getLatitude();
         double x_last = intermediates.get(intermediates.size() - 1).getLongitude();

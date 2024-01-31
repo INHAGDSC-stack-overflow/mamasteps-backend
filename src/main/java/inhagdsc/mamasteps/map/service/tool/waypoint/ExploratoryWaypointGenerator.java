@@ -1,45 +1,25 @@
 package inhagdsc.mamasteps.map.service.tool.waypoint;
 
 import inhagdsc.mamasteps.map.domain.LatLng;
-import inhagdsc.mamasteps.map.domain.RouteRequestDto;
+import inhagdsc.mamasteps.map.domain.RouteRequestEntity;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Component
+@Profile("exploratory")
 public class ExploratoryWaypointGenerator implements WaypointGenerator {
     private int DIVISION = 8;
     private int targetTime;
     private LatLng origin;
     private List<LatLng> intermediates;
 
-    public ExploratoryWaypointGenerator(RouteRequestDto routeRequestDto) {
-        this.targetTime = routeRequestDto.getTargetTime();
-        this.origin = routeRequestDto.getOrigin();
-        this.intermediates = routeRequestDto.getIntermediates();
-    }
-
-    public int getTargetTime() {
-        return targetTime;
-    }
-
-    public void setTargetTime(int targetTime) {
-        this.targetTime = targetTime;
-    }
-
-    public LatLng getOrigin() {
-        return origin;
-    }
-
-    public void setOrigin(LatLng origin) {
-        this.origin = origin;
-    }
-
-    public List<LatLng> getIntermediates() {
-        return intermediates;
-    }
-
-    public void setIntermediates(List<LatLng> intermediates) {
-        this.intermediates = intermediates;
+    public void setRouteRequestEntity(RouteRequestEntity routeRequestEntity) {
+        this.targetTime = routeRequestEntity.getTargetTime();
+        this.origin = routeRequestEntity.getOrigin();
+        this.intermediates = routeRequestEntity.getIntermediates();
     }
 
     public List<LatLng> getSurroundingWaypoints() {
@@ -89,16 +69,16 @@ public class ExploratoryWaypointGenerator implements WaypointGenerator {
 
     private double getDistanceBetweenThree(LatLng first, LatLng middle, LatLng last) {
         return getDistance(
-                    first.getLongitude(),
-                    first.getLatitude(),
-                    middle.getLongitude(),
-                    middle.getLatitude()
-                ) +
+                first.getLongitude(),
+                first.getLatitude(),
+                middle.getLongitude(),
+                middle.getLatitude()
+        ) +
                 getDistance(
-                    middle.getLongitude(),
-                    middle.getLatitude(),
-                    last.getLongitude(),
-                    last.getLatitude()
+                        middle.getLongitude(),
+                        middle.getLatitude(),
+                        last.getLongitude(),
+                        last.getLatitude()
                 );
     }
 
