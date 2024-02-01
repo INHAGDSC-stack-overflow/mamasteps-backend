@@ -2,6 +2,7 @@ package inhagdsc.mamasteps.map.service.tool.waypoint;
 
 import inhagdsc.mamasteps.map.domain.LatLng;
 import inhagdsc.mamasteps.map.domain.RouteRequestEntity;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
@@ -11,7 +12,8 @@ import java.util.List;
 @Component
 @Profile("exploratory")
 public class ExploratoryWaypointGenerator implements WaypointGenerator {
-    private int DIVISION = 8;
+    private int DIVISION = 64;
+    private int NUMBER_OF_RESULTS = 7;
     private int targetTime;
     private LatLng origin;
     private List<LatLng> intermediates;
@@ -64,7 +66,14 @@ public class ExploratoryWaypointGenerator implements WaypointGenerator {
             }
         }
 
-        return surroundingWaypoints;
+        List<LatLng> selectedWaypoints = new ArrayList<>();
+        for (int i = 0; i < surroundingWaypoints.size(); i++) {
+            if (i % (surroundingWaypoints.size() / NUMBER_OF_RESULTS) == 0) {
+                selectedWaypoints.add(surroundingWaypoints.get(i));
+            }
+        }
+
+        return selectedWaypoints;
     }
 
     private double getDistanceBetweenThree(LatLng first, LatLng middle, LatLng last) {
