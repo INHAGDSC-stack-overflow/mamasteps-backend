@@ -19,7 +19,7 @@ public class WalkPreference extends BaseTimeEntity {
 
     @Id
     @GeneratedValue
-    @Column(name = "preference_id")
+    @Column(name = "walk_preference_id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -31,6 +31,9 @@ public class WalkPreference extends BaseTimeEntity {
 
     private LocalTime startTime;
 
-    @Column(name = "end_time")
     private LocalTime endTime;
+
+    public void setUser(User user) {
+        this.user = user;
+    }
 }

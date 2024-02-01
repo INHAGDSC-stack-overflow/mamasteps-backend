@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Builder
 @AllArgsConstructor
@@ -23,5 +24,6 @@ public class SignupRequest {
   private LocalDateTime pregnancyStartDate; // 임신 시작일
   private String guardianPhoneNumber; // 보호자 전화번호
   private ActivityLevel activityLevel; // 활동량
+  private List<WalkPreferenceRequest> walkPreferences; //산책 선호 시간
 
 }
