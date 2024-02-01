@@ -17,4 +17,6 @@ public class WalkPreferenceResponse {
     private DayOfWeek dayOfWeek;
     private LocalTime startTime;
     private LocalTime endTime;
+
+
 }

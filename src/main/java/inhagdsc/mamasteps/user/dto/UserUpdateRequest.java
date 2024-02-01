@@ -1,5 +1,6 @@
 package inhagdsc.mamasteps.user.dto;
 
+import inhagdsc.mamasteps.user.entity.User;
 import inhagdsc.mamasteps.user.entity.enums.ActivityLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,4 +21,7 @@ public class UserUpdateRequest {
     private LocalDateTime pregnancyStartDate;
     private ActivityLevel activityLevel;
     private List<UpdateWalkPreferenceRequest> walkPreferences;
+
+
+
 }

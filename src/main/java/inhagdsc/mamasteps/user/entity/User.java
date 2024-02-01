@@ -96,6 +96,10 @@ public class User extends BaseTimeEntity implements UserDetails {
         walkPreference.setUser(this);
     }
 
+    public void clearWalkPreferences() {
+        this.walkPreferences.clear();
+    }
+
     public void updateProfileImageUrl(String profileImageUrl) {
         this.profileImageUrl = profileImageUrl;
     }
