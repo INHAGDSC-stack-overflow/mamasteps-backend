@@ -29,15 +29,15 @@ public class UserServiceImpl implements UserService {
     private final StorageProvider storageProvider;
 
     @Override
-    public UserResponse getUserInfo(Long userId) {
-        User user = userRepository.findById(userId)
+    public UserInfoResponse getUserInfo(Long userId) {
+        User user = userRepository.findUserWithWalkPreferences(userId)
                 .orElseThrow(() -> new UserHandler(USER_NOT_FOUND));
         return UserConverter.toUserResponse(user);
     }
 
     @Override
     @Transactional
-    public UserResponse updateUserInfo(Long userId, UserUpdateRequest request) {
+    public UserInfoResponse updateUserInfo(Long userId, UserUpdateRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserHandler(USER_NOT_FOUND));
         user.updateInfo(request.getName(), request.getAge(), request.getPregnancyStartDate(), request.getActivityLevel() );

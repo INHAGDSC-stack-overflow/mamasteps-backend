@@ -27,7 +27,7 @@ public class WalkPreference extends BaseTimeEntity {
     private User user;
 
     @Enumerated(EnumType.STRING)
-    private DayOfWeek dayOfWeek; // 월요일, 화요일 등
+    private DayOfWeek dayOfWeek;
 
     private LocalTime startTime;
 

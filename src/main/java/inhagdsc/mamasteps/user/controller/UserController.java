@@ -5,6 +5,7 @@ import inhagdsc.mamasteps.user.dto.*;
 import inhagdsc.mamasteps.user.entity.User;
 import inhagdsc.mamasteps.user.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -14,17 +15,20 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
+@Slf4j
 public class UserController {
 
     private final UserService userService;
 
     @GetMapping("/me")
-    public ApiResponse<UserResponse> getMyInfo(@AuthenticationPrincipal User user) { //로그인 시 유저 정보 가져옴
+    public ApiResponse<UserInfoResponse> getMyInfo(@AuthenticationPrincipal User user) { //로그인 시 유저 정보 가져옴
         return ApiResponse.onSuccess(userService.getUserInfo(user.getId())); //따라서 아이디만 넘긴 다음 서비스에서 디비 다시 조회
     }
 
+
+
     @PatchMapping("/me")
-    public UserResponse updateMyInfo(@RequestBody UserUpdateRequest request, @AuthenticationPrincipal User user) {
+    public UserInfoResponse updateMyInfo(@RequestBody UserUpdateRequest request, @AuthenticationPrincipal User user) {
         return userService.updateUserInfo(user.getId(), request);
     }
 
