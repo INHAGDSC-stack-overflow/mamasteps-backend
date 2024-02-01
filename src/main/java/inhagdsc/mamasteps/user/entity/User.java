@@ -12,7 +12,9 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 @Builder
 @NoArgsConstructor
@@ -37,6 +39,8 @@ public class User extends BaseTimeEntity implements UserDetails {
     @Enumerated(EnumType.STRING)
     private ActivityLevel activityLevel; // 활동량
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<WalkPreference> walkPreferences = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     private Role role;
@@ -85,6 +89,15 @@ public class User extends BaseTimeEntity implements UserDetails {
         this.age = age;
         this.pregnancyStartDate = pregnancyStartDate;
         this.activityLevel = activityLevel;
+    }
+
+    public void addWalkPreference(WalkPreference walkPreference) {
+        this.walkPreferences.add(walkPreference);
+        walkPreference.setUser(this);
+    }
+
+    public void clearWalkPreferences() {
+        this.walkPreferences.clear();
     }
 
     public void updateProfileImageUrl(String profileImageUrl) {

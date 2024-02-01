@@ -1,5 +1,6 @@
 package inhagdsc.mamasteps.common.converter;
 
+import inhagdsc.mamasteps.auth.dto.GoogleLoginResponse;
 import inhagdsc.mamasteps.auth.dto.LoginReponse;
 import inhagdsc.mamasteps.auth.dto.RefreshResponse;
 import inhagdsc.mamasteps.auth.dto.SignupResponse;
@@ -14,13 +15,6 @@ public class AuthConverter {
 
     public static SignupResponse toSignupResponse(User user, String accessToken, String refreshToken) {
         return SignupResponse.builder()
-                .userId(user.getId())
-                .name(user.getName())
-                .age(user.getAge())
-                .pregnancyStartDate(user.getPregnancyStartDate())
-                .guardianPhoneNumber(user.getGuardianPhoneNumber())
-                .activityLevel(user.getActivityLevel())
-                .profileImageUrl(user.getProfileImageUrl())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
@@ -28,7 +22,6 @@ public class AuthConverter {
 
     public static LoginReponse toLoginResponse(User user, String accessToken, String refreshToken) {
         return LoginReponse.builder()
-                .userId(user.getId())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
@@ -38,6 +31,13 @@ public class AuthConverter {
         return RefreshResponse.builder()
                 .userId(user.getId())
                 .accessToken(accessToken)
+                .build();
+    }
+
+    public static GoogleLoginResponse toGoogleLoginResponse(User user, String accessToken, String refreshToken) {
+        return GoogleLoginResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
                 .build();
     }
 }
