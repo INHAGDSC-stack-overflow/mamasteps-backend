@@ -12,8 +12,10 @@ import java.util.List;
 @Component
 @Profile("exploratory")
 public class ExploratoryWaypointGenerator implements WaypointGenerator {
-    private int DIVISION = 64;
-    private int NUMBER_OF_RESULTS = 7;
+    @Value("${WAYPOINT_GENERATOR_AREA_DIVISION}")
+    private int DIVISION;
+    @Value("${WAYPOINT_GENERATOR_NUMBER_OF_RESULTS}")
+    private int NUMBER_OF_RESULTS;
     private int targetTime;
     private LatLng origin;
     private List<LatLng> intermediates;
