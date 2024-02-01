@@ -2,6 +2,7 @@ package inhagdsc.mamasteps.map.service.tool.waypoint;
 
 import inhagdsc.mamasteps.map.domain.LatLng;
 import inhagdsc.mamasteps.map.domain.RouteRequestEntity;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
@@ -11,7 +12,10 @@ import java.util.List;
 @Component
 @Profile("exploratory")
 public class ExploratoryWaypointGenerator implements WaypointGenerator {
-    private int DIVISION = 8;
+    @Value("${WAYPOINT_GENERATOR_AREA_DIVISION}")
+    private int DIVISION;
+    @Value("${WAYPOINT_GENERATOR_NUMBER_OF_RESULTS}")
+    private int NUMBER_OF_RESULTS;
     private int targetTime;
     private LatLng origin;
     private List<LatLng> intermediates;
@@ -64,7 +68,14 @@ public class ExploratoryWaypointGenerator implements WaypointGenerator {
             }
         }
 
-        return surroundingWaypoints;
+        List<LatLng> selectedWaypoints = new ArrayList<>();
+        for (int i = 0; i < surroundingWaypoints.size(); i++) {
+            if (i % (surroundingWaypoints.size() / NUMBER_OF_RESULTS) == 0) {
+                selectedWaypoints.add(surroundingWaypoints.get(i));
+            }
+        }
+
+        return selectedWaypoints;
     }
 
     private double getDistanceBetweenThree(LatLng first, LatLng middle, LatLng last) {
@@ -96,7 +107,7 @@ public class ExploratoryWaypointGenerator implements WaypointGenerator {
             sumOfTerms += getDistance(x1, y1, x2, y2);
         }
 
-        return (5.0 * targetTime / 60) - sumOfTerms;
+        return (3.5 * targetTime / 60) - sumOfTerms;
     }
 
     private double getDistance(double x1, double y1, double x2, double y2) {

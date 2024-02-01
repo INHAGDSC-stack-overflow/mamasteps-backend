@@ -35,14 +35,14 @@ public class KoreaRoutesService implements RoutesService {
     }
 
     @Override
-    public String computeRoutes(RouteRequestDto routeRequestDto) throws IOException {
+    public ObjectNode computeRoutes(RouteRequestDto routeRequestDto) throws IOException {
         RouteRequestEntity originRouteRequestEntity = routeRequestDto.toEntity();
         waypointGenerator.setRouteRequestEntity(originRouteRequestEntity);
         List<LatLng> createdWaypoints = waypointGenerator.getSurroundingWaypoints();
 
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode result = mapper.createObjectNode();
-        ArrayNode polylinesArray = mapper.createArrayNode();
+        ArrayNode routesArray = mapper.createArrayNode();
         for (LatLng waypoint : createdWaypoints) {
             RouteRequestDto routeRequestEntity = new RouteRequestDto();
             routeRequestEntity.setTargetTime(originRouteRequestEntity.getTargetTime());
@@ -52,20 +52,15 @@ public class KoreaRoutesService implements RoutesService {
 
             MultiValueMap<String, String> requestBody = buildRequestBody(routeRequestEntity);
             try {
-                String polyline = encodePolyline(parseApiResponse(postAPIRequest(requestBody))).toString();
-                polylinesArray.add(polyline);
+                ObjectNode route = getRoute(parseApiResponse(postAPIRequest(requestBody)));
+                routesArray.add(route);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }
 
-        result.set("polylines", polylinesArray);
-
-//        MultiValueMap<String, String> requestBody = buildRequestBody(originRouteRequestDto);
-//        String apiResponse = postAPIRequest(requestBody);
-//        String result = encodePolyline(parseApiResponse(apiResponse)).toString();
-
-        return result.toString();
+        result.set("polylines", routesArray);
+        return result;
     }
 
     private MultiValueMap<String, String> buildRequestBody(RouteRequestDto routeRequestDto) {
@@ -124,7 +119,7 @@ public class KoreaRoutesService implements RoutesService {
         return result;
     }
 
-    private ObjectNode encodePolyline(ObjectNode coordinates) throws IOException {
+    private ObjectNode getRoute(ObjectNode coordinates) throws IOException {
 
         String polyline = new PolylineEncoder().encode(coordinates.path("coordinates"));
 
