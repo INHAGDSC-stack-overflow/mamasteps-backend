@@ -25,12 +25,12 @@ public class UserController {
 
     @GetMapping("/me")
     public ApiResponse<UserInfoResponse> getMyInfo(@AuthenticationPrincipal User user) { //로그인 시 유저 정보 가져옴
-        return ApiResponse.onSuccess(userService.getUserInfo(user.getId())); //따라서 아이디만 넘긴 다음 서비스에서 디비 다시 조회
+        return ApiResponse.onSuccess(OK, userService.getUserInfo(user.getId())); //따라서 아이디만 넘긴 다음 서비스에서 디비 다시 조회
 
     }
 
     @PatchMapping("/me")
-    public ApiResponse<UserResponse> updateMyInfo(@RequestBody UserUpdateRequest request, @AuthenticationPrincipal User user) {
+    public ApiResponse<UserInfoResponse> updateMyInfo(@RequestBody UserUpdateRequest request, @AuthenticationPrincipal User user) {
         return ApiResponse.onSuccess(OK, userService.updateUserInfo(user.getId(), request));
     }
 

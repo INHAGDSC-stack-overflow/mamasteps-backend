@@ -3,7 +3,6 @@ package inhagdsc.mamasteps.auth.controller;
 import inhagdsc.mamasteps.auth.dto.*;
 import inhagdsc.mamasteps.auth.service.AuthService;
 import inhagdsc.mamasteps.common.ApiResponse;
-import inhagdsc.mamasteps.common.code.status.SuccessStatus;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -42,7 +41,7 @@ public class AuthController {
 
   @PostMapping("/google-login")
   public ApiResponse<GoogleLoginResponse> googleLogin(@RequestBody GoogleLoginRequest request) {
-    return ApiResponse.onSuccess(authService.googleLogin(request));
+    return ApiResponse.onSuccess(OK, authService.googleLogin(request));
   }
 
 
