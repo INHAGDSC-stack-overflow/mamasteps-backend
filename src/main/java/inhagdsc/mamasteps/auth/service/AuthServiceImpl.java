@@ -63,6 +63,14 @@ public class AuthServiceImpl implements AuthService {
   }
 
   @Override
+  public GoogleLoginResponse googleLogin(GoogleLoginRequest request) {
+    User user = userRepository.findByEmail(request.getEmail())
+            .orElseThrow(() -> new UserHandler(USER_NOT_FOUND));
+    createtoken token = getCreateToken(user);
+    return AuthConverter.toGoogleLoginResponse(user, token.accessToken, token.refreshToken);
+  }
+
+  @Override
   public RefreshResponse refreshToken(HttpServletRequest request, HttpServletResponse response)  {
     final String authHeader = request.getHeader(HEADER_AUTHORIZATION);
     final String refreshToken;

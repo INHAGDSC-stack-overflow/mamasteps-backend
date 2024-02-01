@@ -1,5 +1,6 @@
 package inhagdsc.mamasteps.common.converter;
 
+import inhagdsc.mamasteps.auth.dto.GoogleLoginResponse;
 import inhagdsc.mamasteps.auth.dto.LoginReponse;
 import inhagdsc.mamasteps.auth.dto.RefreshResponse;
 import inhagdsc.mamasteps.auth.dto.SignupResponse;
@@ -30,6 +31,13 @@ public class AuthConverter {
         return RefreshResponse.builder()
                 .userId(user.getId())
                 .accessToken(accessToken)
+                .build();
+    }
+
+    public static GoogleLoginResponse toGoogleLoginResponse(User user, String accessToken, String refreshToken) {
+        return GoogleLoginResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
                 .build();
     }
 }

@@ -6,6 +6,7 @@ import inhagdsc.mamasteps.common.exception.handler.UserHandler;
 import inhagdsc.mamasteps.common.stroge.StorageProvider;
 import inhagdsc.mamasteps.user.dto.*;
 import inhagdsc.mamasteps.user.entity.User;
+import inhagdsc.mamasteps.user.entity.WalkPreference;
 import inhagdsc.mamasteps.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Builder
 @AllArgsConstructor
@@ -18,4 +19,5 @@ public class UserUpdateRequest {
     private Integer age;
     private LocalDateTime pregnancyStartDate;
     private ActivityLevel activityLevel;
+    private List<UpdateWalkPreferenceRequest> walkPreferences;
 }
