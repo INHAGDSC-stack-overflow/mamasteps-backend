@@ -107,7 +107,7 @@ public class ExploratoryWaypointGenerator implements WaypointGenerator {
             sumOfTerms += getDistance(x1, y1, x2, y2);
         }
 
-        return (5.0 * targetTime / 60) - sumOfTerms;
+        return (3.5 * targetTime / 60) - sumOfTerms;
     }
 
     private double getDistance(double x1, double y1, double x2, double y2) {
