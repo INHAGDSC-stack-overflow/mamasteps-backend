@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.protobuf.FieldMask;
 import inhagdsc.mamasteps.map.domain.LatLng;
 import inhagdsc.mamasteps.map.domain.RouteRequestDto;
 import inhagdsc.mamasteps.map.domain.RouteRequestEntity;
@@ -19,6 +20,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -26,6 +28,10 @@ import java.util.List;
 public class InternationalRoutesService implements RoutesService {
     @Value("${GOOGLE_API_KEY}")
     private String apiKey;
+    @Value("${REQUEST_FIELDMASK}")
+    private String REQUEST_FIELDMASK;
+    @Value("${GET_POLYLINE_DIRECTLY}")
+    private boolean GET_POLYLINE_DIRECTLY;
     private final WebClient webClient;
     private final WaypointGenerator waypointGenerator;
 
@@ -34,7 +40,6 @@ public class InternationalRoutesService implements RoutesService {
         this.webClient = webClientBuilder.baseUrl("https://routes.googleapis.com").build();
         this.waypointGenerator = waypointGenerator;
     }
-
     @Override
     public ObjectNode computeRoutes(RouteRequestDto routeRequestDto) throws RuntimeException, JsonProcessingException {
         RouteRequestEntity originRouteRequestEntity = routeRequestDto.toEntity();
@@ -53,8 +58,14 @@ public class InternationalRoutesService implements RoutesService {
 
             String requestBody = buildRequestBody(routeRequestEntity);
             try {
-                ObjectNode route = getRoute(parseApiResponse(postAPIRequest(requestBody)));
-                routesArray.add(route);
+                if(GET_POLYLINE_DIRECTLY){
+                    ObjectNode route = getRouteFromResponseDirectly(postAPIRequest(requestBody));
+                    routesArray.add(route);
+                }
+                if(!GET_POLYLINE_DIRECTLY){
+                    ObjectNode route = getRoute(parseApiResponse(postAPIRequest(requestBody)));
+                    routesArray.add(route);
+                }
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -79,16 +90,33 @@ public class InternationalRoutesService implements RoutesService {
                 .uri("/directions/v2:computeRoutes")
                 .header("Content-Type", "application/json")
                 .header("X-Goog-Api-Key", apiKey)
-                .header("X-Goog-FieldMask", "routes.duration,routes.distanceMeters,routes.legs")
+                .header("X-Goog-FieldMask", REQUEST_FIELDMASK)
                 .body(Mono.just(requestBody), String.class)
                 .retrieve()
                 .bodyToMono(String.class)
                 .block();
     }
 
+    private ObjectNode getRouteFromResponseDirectly(String apiResponse) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode rootNode = mapper.readTree(apiResponse);
+
+        JsonNode route = rootNode.path("routes").get(0);
+        double totalDistance = route.path("distanceMeters").asDouble();
+        int totalTime = Integer.parseInt(route.path("duration").asText().replace("s", ""));
+        String polyline = route.path("polyline").path("encodedPolyline").asText();
+
+        ObjectNode result = mapper.createObjectNode();
+        result.put("encodedPolyline", polyline);
+        result.put("totalTimeSeconds", totalTime);
+        result.put("totalDistanceMeters", totalDistance);
+
+        return result;
+    }
+
     private ObjectNode parseApiResponse(String apiResponse) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
-        JsonNode rootNode = mapper.readTree(apiResponse.toString());
+        JsonNode rootNode = mapper.readTree(apiResponse);
 
         JsonNode route = rootNode.path("routes").get(0);
         double totalDistance = route.path("distanceMeters").asDouble();
