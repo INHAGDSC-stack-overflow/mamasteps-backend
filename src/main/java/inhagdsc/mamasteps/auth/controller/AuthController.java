@@ -42,7 +42,7 @@ public class AuthController {
 
   @PostMapping("/google-login")
   public ApiResponse<GoogleLoginResponse> googleLogin(@RequestBody GoogleLoginRequest request) {
-    return ApiResponse.onSuccess(authService.googleLogin(request));
+    return ApiResponse.onSuccess(OK, authService.googleLogin(request));
   }
 
 
