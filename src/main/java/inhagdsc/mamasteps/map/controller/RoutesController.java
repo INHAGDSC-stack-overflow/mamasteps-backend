@@ -1,6 +1,7 @@
 package inhagdsc.mamasteps.map.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import inhagdsc.mamasteps.common.ApiResponse;
 import inhagdsc.mamasteps.common.code.status.SuccessStatus;
 import inhagdsc.mamasteps.map.domain.RouteRequestDto;
@@ -29,8 +30,8 @@ public class RoutesController {
     }
 
     @PostMapping("/computeRoutes")
-    public String getRoutes(@RequestBody RouteRequestDto routeRequestDto) throws IOException, JsonProcessingException {
-        String response = routesService.computeRoutes(routeRequestDto);
+    public ObjectNode getRoutes(@RequestBody RouteRequestDto routeRequestDto) throws IOException, JsonProcessingException {
+        ObjectNode response = routesService.computeRoutes(routeRequestDto);
         return response;
     }
 }

@@ -36,14 +36,14 @@ public class InternationalRoutesService implements RoutesService {
     }
 
     @Override
-    public String computeRoutes(RouteRequestDto routeRequestDto) throws RuntimeException, JsonProcessingException {
+    public ObjectNode computeRoutes(RouteRequestDto routeRequestDto) throws RuntimeException, JsonProcessingException {
         RouteRequestEntity originRouteRequestEntity = routeRequestDto.toEntity();
         waypointGenerator.setRouteRequestEntity(originRouteRequestEntity);
         List<LatLng> createdWaypoints = waypointGenerator.getSurroundingWaypoints();
 
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode result = mapper.createObjectNode();
-        ArrayNode polylinesArray = mapper.createArrayNode();
+        ArrayNode routesArray = mapper.createArrayNode();
         for (LatLng waypoint : createdWaypoints) {
             RouteRequestDto routeRequestEntity = new RouteRequestDto();
             routeRequestEntity.setTargetTime(originRouteRequestEntity.getTargetTime());
@@ -53,26 +53,15 @@ public class InternationalRoutesService implements RoutesService {
 
             String requestBody = buildRequestBody(routeRequestEntity);
             try {
-                String polyline = encodePolyline(parseApiResponse(postAPIRequest(requestBody))).toString();
-                polylinesArray.add(polyline);
+                ObjectNode route = getRoute(parseApiResponse(postAPIRequest(requestBody)));
+                routesArray.add(route);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }
 
-        result.set("polylines", polylinesArray);
-        return result.toString();
-
-//        return postAPIRequest(requestBody)
-//                .flatMap(response -> {
-//                    try {
-//                        ObjectNode parsedResponse = parseApiResponse(response);
-//                        return Mono.just(encodePolyline(parsedResponse).toString());
-//                    } catch (IOException e) {
-//                        return Mono.error(new RuntimeException(e));
-//                    }
-//                });
-
+        result.set("polylines", routesArray);
+        return result;
     }
 
     private String buildRequestBody(RouteRequestDto routeRequestDto) {
@@ -131,7 +120,7 @@ public class InternationalRoutesService implements RoutesService {
         return result;
     }
 
-    private ObjectNode encodePolyline(ObjectNode coordinates) throws IOException {
+    private ObjectNode getRoute(ObjectNode coordinates) throws IOException {
 
         String polyline = new PolylineEncoder().encode(coordinates.path("coordinates"));
 
