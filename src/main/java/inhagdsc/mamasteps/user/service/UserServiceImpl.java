@@ -36,7 +36,7 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     public UserInfoResponse updateUserInfo(Long userId, UserUpdateRequest request) {
-        User user = findById(userId);
+        User user = findUserWithWalkPreferences(userId);
         updateWalkPreferences(request, user);
         user.updateInfo(request.getName(), request.getAge(), request.getPregnancyStartDate(), request.getActivityLevel());
         return UserConverter.toUserResponse(user);
