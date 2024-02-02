@@ -16,6 +16,8 @@ public class ExploratoryWaypointGenerator implements WaypointGenerator {
     private int DIVISION;
     @Value("${WAYPOINT_GENERATOR_NUMBER_OF_RESULTS}")
     private int NUMBER_OF_RESULTS;
+    @Value("${DISTANCE_FACTOR}")
+    private double DISTANCE_FACTOR;
     private int targetTime;
     private LatLng origin;
     private List<LatLng> intermediates;
@@ -107,7 +109,7 @@ public class ExploratoryWaypointGenerator implements WaypointGenerator {
             sumOfTerms += getDistance(x1, y1, x2, y2);
         }
 
-        return (3.5 * targetTime / 60) - sumOfTerms;
+        return ((3.5 * targetTime / 60) - sumOfTerms) * DISTANCE_FACTOR;
     }
 
     private double getDistance(double x1, double y1, double x2, double y2) {
