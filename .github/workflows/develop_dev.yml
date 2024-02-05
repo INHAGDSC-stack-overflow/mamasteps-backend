@@ -81,10 +81,9 @@ jobs:
           wait_for_deployment: false
 
 
-      - name: Install redis-tools
-        run: sudo apt-get install redis-tools -y
+      - name: Start Redis service
+        run: sudo service redis-server start
 
       - name: Redis Connection Test
-        run: |
-          redis-cli -h localhost -p 6379 ping
+        run: redis-cli -h localhost -p 6379 ping
         shell: bash
