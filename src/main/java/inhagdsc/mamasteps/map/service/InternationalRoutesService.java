@@ -72,6 +72,7 @@ public class InternationalRoutesService implements RoutesService {
         }
 
         ArrayNode sortedRoutesArray = sortRoutesArrayByTime(routesArray);
+        deduplicateRoutes(sortedRoutesArray);
         result.set("polylines", sortedRoutesArray);
         return result;
     }
