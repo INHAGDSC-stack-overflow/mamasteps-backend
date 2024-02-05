@@ -44,5 +44,11 @@ public class AuthController {
     return ApiResponse.onSuccess(OK, authService.googleLogin(request));
   }
 
+  @GetMapping("/health")
+  public ApiResponse<String> health() {
+    return ApiResponse.onSuccess(OK, "I'm healthy!");
+  }
+
+
 
 }
