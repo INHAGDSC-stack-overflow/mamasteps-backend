@@ -20,25 +20,6 @@ spring:
 spring:
   config:
     activate:
-      on-profile: prod
-  datasource:
-    url: ${PROD_DB_URL}
-    username: ${PROD_DB_USERNAME}
-    password: ${PROD_DB_PASSWORD}
-    driver-class-name: com.mysql.cj.jdbc.Driver
-  jpa:
-    hibernate:
-      ddl-auto: update
-    properties:
-      hibernate:
-        format_sql: true
-    show-sql: true
-
-
----
-spring:
-  config:
-    activate:
       on-profile: local
   datasource:
     url: ${LOCAL_DB_URL}
