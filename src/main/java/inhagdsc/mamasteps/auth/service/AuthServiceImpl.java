@@ -21,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 
+import static inhagdsc.mamasteps.common.code.status.ErrorStatus.USER_ALREADY_EXIST;
 import static inhagdsc.mamasteps.common.code.status.ErrorStatus.USER_NOT_FOUND;
 import static inhagdsc.mamasteps.common.stroge.StorageProvider.PROFILE;
 
@@ -66,6 +67,8 @@ public class AuthServiceImpl implements AuthService {
 
 
   private User createUser(SignupRequest request, String prifleImageUrl) {
+    userRepository.findByEmail(request.getEmail()).ifPresent(user -> {
+      throw new UserHandler(USER_ALREADY_EXIST);});
     return User.builder()
             .email(request.getEmail())
             .password(passwordEncoder.encode(request.getPassword()))
