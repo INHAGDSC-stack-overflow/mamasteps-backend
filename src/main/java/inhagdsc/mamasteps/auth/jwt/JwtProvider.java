@@ -26,8 +26,6 @@ public class JwtProvider {
   private String secretKey;
   @Value("${jwt.expiration}")
   private Long accessExpiration;
-  @Value("${jwt.refresh-token.expiration}")
-  private Long refreshExpiration;
   @Value("${jwt.issuer}")
   private String issuer;
 
@@ -54,10 +52,6 @@ public class JwtProvider {
     return buildToken(extraClaims, userDetails, accessExpiration);
   }
 
-  //사용자 정보를 바탕으로 리프레시 토큰을 생성
-  public String generateRefreshToken(UserDetails userDetails) {
-    return buildToken(new HashMap<>(), userDetails, refreshExpiration);
-  }
 
   // 주어진 클레임, 사용자 정보, 그리고 만료 시간을 바탕으로 JWT 토큰을 생성
   private String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long expiration) {

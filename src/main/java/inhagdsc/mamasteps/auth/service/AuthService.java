@@ -12,5 +12,4 @@ public interface AuthService {
 
     GoogleLoginResponse googleLogin(GoogleLoginRequest request);
     LoginReponse login(LoginRequest request);
-    RefreshResponse refreshToken(HttpServletRequest request, HttpServletResponse response) ;
 }

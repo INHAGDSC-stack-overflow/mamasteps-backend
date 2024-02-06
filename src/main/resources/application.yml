@@ -13,17 +13,11 @@ spring:
       hibernate:
         format_sql: true
     show-sql: true
-  data:
-    redis:
-      port: 6379
-      host: 127.0.0.1
 
 jwt:
   issuer: mamasteps@mamasteps.com
   secret_key: ${JWT_SECRET_KEY}
   expiration: 86400000
-  refresh-token:
-    expiration: 604800000
 
 google:
   storage:
