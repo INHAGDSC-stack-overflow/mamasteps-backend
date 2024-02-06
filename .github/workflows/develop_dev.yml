@@ -42,6 +42,13 @@ jobs:
         run: echo "CurrentTime=$"
         shell: bash
 
+      - name: Install Redis on EC2
+        run: |
+          sudo yum update -y
+          sudo yum install redis -y
+          sudo systemctl start redis
+          sudo systemctl enable redis
+
 
       - name: Generate deployment package
         run: |
