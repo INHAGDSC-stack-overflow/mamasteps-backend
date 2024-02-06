@@ -15,8 +15,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 
 import static inhagdsc.mamasteps.user.entity.enums.Permission.*;
+import static inhagdsc.mamasteps.user.entity.enums.Role.ADMIN;
 import static inhagdsc.mamasteps.user.entity.enums.Role.MANAGER;
-import static io.lettuce.core.AclCategory.ADMIN;
 import static org.springframework.http.HttpMethod.*;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 

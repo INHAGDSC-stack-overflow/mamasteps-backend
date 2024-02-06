@@ -1,6 +1,5 @@
 package inhagdsc.mamasteps.auth.jwt;
 
-import inhagdsc.mamasteps.auth.redis.RedisProvider;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +19,6 @@ import static inhagdsc.mamasteps.auth.jwt.JwtProvider.TOKEN_PREFIX;
 public class LogoutService implements LogoutHandler {
 
   private final JwtProvider jwtProvider;
-  private final RedisProvider redisProvider;
 
   @Override
   public void logout(
@@ -36,7 +34,6 @@ public class LogoutService implements LogoutHandler {
     jwt = authHeader.substring(7);
     String username = jwtProvider.extractUsername(jwt);
     log.info("username: {}", username);
-    redisProvider.deleteValueOps(username);
       SecurityContextHolder.clearContext();
     }
 }
