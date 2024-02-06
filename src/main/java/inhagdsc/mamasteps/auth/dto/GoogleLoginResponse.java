@@ -1,5 +1,7 @@
 package inhagdsc.mamasteps.auth.dto;
 
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -9,8 +11,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class RefreshResponse {
+public class GoogleLoginResponse {
 
-    private Long userId;
+    @JsonProperty("access_token")
     private String accessToken;
 }

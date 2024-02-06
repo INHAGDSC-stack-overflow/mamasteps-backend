@@ -1,7 +1,7 @@
 package inhagdsc.mamasteps.auth.dto;
 
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -11,11 +11,14 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class LoginRequest {
+public class GoogleLoginRequest {
 
-    @NotBlank
+    @NotNull
+    private String name;
+
+    @NotNull
     @Email
     private String email;
-    @NotBlank
-    private String password;
+    @NotNull
+    private String id;
 }

@@ -9,6 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 public interface AuthService {
 
     SignupResponse signup(MultipartFile profileImage, SignupRequest request);
+
+    GoogleLoginResponse googleLogin(GoogleLoginRequest request);
     LoginReponse login(LoginRequest request);
-    RefreshResponse refreshToken(HttpServletRequest request, HttpServletResponse response) ;
 }

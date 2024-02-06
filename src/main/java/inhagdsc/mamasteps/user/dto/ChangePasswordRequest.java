@@ -1,5 +1,6 @@
 package inhagdsc.mamasteps.user.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 @Getter
@@ -9,7 +10,10 @@ import lombok.*;
 @NoArgsConstructor
 public class ChangePasswordRequest {
 
+    @NotBlank
     private String currentPassword;
+    @NotBlank
     private String newPassword;
+    @NotBlank
     private String confirmationPassword;
 }

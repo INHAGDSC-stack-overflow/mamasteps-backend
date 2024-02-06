@@ -29,26 +29,23 @@ public class UserServiceImpl implements UserService {
     private final StorageProvider storageProvider;
 
     @Override
-    public UserResponse getUserInfo(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserHandler(USER_NOT_FOUND));
+    public UserInfoResponse getUserInfo(Long userId) {
+        User user = findUserWithWalkPreferences(userId);
         return UserConverter.toUserResponse(user);
     }
 
-    @Override
     @Transactional
-    public UserResponse updateUserInfo(Long userId, UserUpdateRequest request) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserHandler(USER_NOT_FOUND));
-        user.updateInfo(request.getName(), request.getAge(), request.getPregnancyStartDate(), request.getActivityLevel() );
+    public UserInfoResponse updateUserInfo(Long userId, UserUpdateRequest request) {
+        User user = findUserWithWalkPreferences(userId);
+        updateWalkPreferences(request, user);
+        user.updateInfo(request.getName(), request.getAge(), request.getPregnancyStartDate(), request.getActivityLevel());
         return UserConverter.toUserResponse(user);
     }
 
     @Override
     @Transactional
     public ChangePasswordResponse changePassword(Long userId, ChangePasswordRequest request) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserHandler(USER_NOT_FOUND));
+        User user = findById(userId);
         log.info("현재 비밀번호 : {}", user.getPassword());
         validatePasswordChang(request, user);
         user.setPassword(passwordEncoder.encode(request.getNewPassword())); // 비밀번호 업데이트
@@ -60,13 +57,28 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public ChangeProfileResponse updateProfile(Long userId, MultipartFile profileImage) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserHandler(USER_NOT_FOUND));
+        User user = findById(userId);
         deleteFile(user);
         user.updateProfileImageUrl(storageProvider.fileUpload(profileImage, PROFILE));
         return UserConverter.toChangeProfileResponse(user);
     }
 
+    private User findById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new UserHandler(USER_NOT_FOUND));
+    }
+
+    private void updateWalkPreferences(UserUpdateRequest request, User user) {
+        user.clearWalkPreferences();
+        request.getWalkPreferences().stream()
+                .map(UpdateWalkPreferenceRequest::toEntity)
+                .forEach(user::addWalkPreference);
+    }
+
+    private User findUserWithWalkPreferences(Long userId) {
+        return userRepository.findUserWithWalkPreferences(userId)
+                .orElseThrow(() -> new UserHandler(USER_NOT_FOUND));
+    }
     private void validatePasswordChang(ChangePasswordRequest request, User user) {
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword()))
             throw new UserHandler(PASSWORD_NOT_MATCH);// 만약 현재 비밀번호가 맞지 않다면 예외
