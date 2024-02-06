@@ -10,16 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'develop'
 
-    services:
-      redis:
-        image: "redis:latest"
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 3
 
     steps:
       - name: Checkout
@@ -53,6 +43,7 @@ jobs:
         shell: bash
 
 
+
       - name: Generate deployment package
         run: |
             mkdir -p deploy
@@ -63,7 +54,10 @@ jobs:
             cd deploy && zip -r deploy.zip .
           
 
-      
+      - name: Debug Beanstalk Deploy
+        run: |
+          echo "AWS_ACTION_ACCESS_KEY_ID: ${{ secrets.AWS_ACTION_ACCESS_KEY_ID }}"
+          echo "AWS_ACTION_SECRET_ACCESS_KEY: ${{ secrets.AWS_ACTION_SECRET_ACCESS_KEY }}"
 
       - name: Beanstalk Deploy
         uses: einaregilsson/beanstalk-deploy@v20
@@ -71,15 +65,10 @@ jobs:
           aws_access_key: ${{ secrets.AWS_ACTION_ACCESS_KEY_ID }}
           aws_secret_key: ${{ secrets.AWS_ACTION_SECRET_ACCESS_KEY }}
           application_name: mamasteps-dev
-          environment_name: Mamasteps-dev-env
+          environment_name: Mamasteps-dev-env-1
           version_label: github-action-${{ steps.current-time.outputs.formattedTime }}
           region: ap-northeast-2
           deployment_package: deploy/deploy.zip
           wait_for_deployment: false
 
-
-      - name: Redis Connection Test
-        run: |
-          redis-cli -h localhost -p 6379 ping
-        shell: bash
 

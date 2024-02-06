@@ -34,11 +34,6 @@ public class AuthController {
     return ApiResponse.onSuccess(OK, authService.login(request));
   }
 
-  @PostMapping("/refresh-token")
-  public ApiResponse<RefreshResponse> refreshToken(HttpServletRequest request, HttpServletResponse response)  {
-    return ApiResponse.onSuccess(CREATED, authService.refreshToken(request, response));
-  }
-
   @PostMapping("/google-login")
   public ApiResponse<GoogleLoginResponse> googleLogin(@RequestBody GoogleLoginRequest request) {
     return ApiResponse.onSuccess(OK, authService.googleLogin(request));
