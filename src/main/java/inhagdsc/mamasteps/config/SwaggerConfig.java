@@ -29,7 +29,7 @@ public class SwaggerConfig implements WebMvcConfigurer {
     public OpenAPI OpenApi() {
 
         return new OpenAPI()
-                .addServersItem(new Server().url("/"))
+                .addServersItem(new Server().url("https://yourdomain.com"))
                 .components(new Components()
                         // 여기부터 추가 부분
                         .addSecuritySchemes(SECURITY_SCHEME_NAME, new SecurityScheme()
