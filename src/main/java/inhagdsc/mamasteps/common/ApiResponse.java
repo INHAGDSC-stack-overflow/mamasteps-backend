@@ -22,14 +22,15 @@ public class ApiResponse<T> {
 
 
     // 성공한 경우 응답 생성
-
-    public static <T> ApiResponse<T> onSuccess(T result){
-        return new ApiResponse<>(true, SuccessStatus.OK.getCode() , SuccessStatus.OK.getMessage(), result);
+    public static <T> ApiResponse<T> onSuccess(BaseCode code, T result){
+        return new ApiResponse<>(true, code.getReasonHttpStatus().getCode(), code.getReasonHttpStatus().getMessage(), result);
     }
 
     public static <T> ApiResponse<T> of(BaseCode code, T result){
         return new ApiResponse<>(true, code.getReasonHttpStatus().getCode() , code.getReasonHttpStatus().getMessage(), result);
     }
+
+
 
 
     // 실패한 경우 응답 생성
