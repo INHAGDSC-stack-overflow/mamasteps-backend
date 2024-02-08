@@ -18,20 +18,20 @@ import java.util.List;
 @Getter
 public class SignupRequest {
 
-  //@NotBlank
-  //@Email
+  @NotBlank
+  @Email
   private String email;
-  //@NotBlank
+  @NotBlank
   private String password;
-  //@NotBlank
+  @NotBlank
   private String name; // 이름
-  //@NotNull
+  @NotNull
   private Integer age; // 나이
-  //@NotNull
+  @NotNull
   private LocalDateTime pregnancyStartDate; // 임신 시작일
-  //@NotBlank
+  @NotBlank
   private String guardianPhoneNumber; // 보호자 전화번호
-  //@NotNull
+  @NotNull
   private ActivityLevel activityLevel; // 활동량
   private String profileImage;
   private List<WalkPreferenceRequest> walkPreferences; //산책 선호 시간

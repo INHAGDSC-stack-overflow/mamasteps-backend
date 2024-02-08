@@ -6,7 +6,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalTime;
 
 @Builder
 @AllArgsConstructor
@@ -15,8 +14,8 @@ import java.time.LocalTime;
 public class WalkPreferenceResponse {
 
     private DayOfWeek dayOfWeek;
-    private LocalTime startTime;
-    private LocalTime endTime;
+    private String startTime;
+    private String endTime;
 
 
 }

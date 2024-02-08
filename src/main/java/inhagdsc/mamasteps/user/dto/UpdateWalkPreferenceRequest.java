@@ -16,8 +16,8 @@ import java.time.LocalTime;
 public class UpdateWalkPreferenceRequest {
 
     private DayOfWeek dayOfWeek;
-    private LocalTime startTime;
-    private LocalTime endTime;
+    private String startTime;
+    private String endTime;
 
     public WalkPreference toEntity() {
         return WalkPreference.builder()

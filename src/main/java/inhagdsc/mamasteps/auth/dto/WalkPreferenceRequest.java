@@ -15,6 +15,6 @@ import java.time.LocalTime;
 public class WalkPreferenceRequest {
 
     private DayOfWeek dayOfWeek;
-    private LocalTime startTime;
-    private LocalTime endTime;
+    private String startTime;
+    private String endTime;
 }
