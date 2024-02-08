@@ -4,7 +4,6 @@ import inhagdsc.mamasteps.auth.dto.*;
 import inhagdsc.mamasteps.auth.jwt.JwtProvider;
 import inhagdsc.mamasteps.common.converter.AuthConverter;
 import inhagdsc.mamasteps.common.exception.handler.UserHandler;
-import inhagdsc.mamasteps.common.stroge.StorageProvider;
 import inhagdsc.mamasteps.user.entity.User;
 import inhagdsc.mamasteps.user.entity.WalkPreference;
 import inhagdsc.mamasteps.user.entity.enums.Role;
@@ -16,14 +15,12 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 
 import java.util.ArrayList;
 
 import static inhagdsc.mamasteps.common.code.status.ErrorStatus.USER_ALREADY_EXIST;
 import static inhagdsc.mamasteps.common.code.status.ErrorStatus.USER_NOT_FOUND;
-import static inhagdsc.mamasteps.common.stroge.StorageProvider.PROFILE;
 
 @Service
 @RequiredArgsConstructor
@@ -35,11 +32,10 @@ public class AuthServiceImpl implements AuthService {
   private final PasswordEncoder passwordEncoder;
   private final AuthenticationManager authenticationManager;
   private final JwtProvider jwtProvider;
-  private final StorageProvider storageProvider;
 
   @Override
-  public SignupResponse signup(MultipartFile profileImage, SignupRequest request) {
-    User user = createUser(request, storageProvider.fileUpload(profileImage, PROFILE));
+  public SignupResponse signup(SignupRequest request) {
+    User user = createUser(request);
     createWalkPreferences(request, user);
     User savedUser = userRepository.save(user);
     createtoken token = getCreateToken(savedUser);
@@ -65,8 +61,7 @@ public class AuthServiceImpl implements AuthService {
     return AuthConverter.toGoogleLoginResponse(user, token.accessToken);
   }
 
-
-  private User createUser(SignupRequest request, String prifleImageUrl) {
+  private User createUser(SignupRequest request) {
     userRepository.findByEmail(request.getEmail()).ifPresent(user -> {
       throw new UserHandler(USER_ALREADY_EXIST);});
     return User.builder()
@@ -77,7 +72,7 @@ public class AuthServiceImpl implements AuthService {
             .pregnancyStartDate(request.getPregnancyStartDate())
             .guardianPhoneNumber(request.getGuardianPhoneNumber())
             .activityLevel(request.getActivityLevel())
-            .profileImageUrl(prifleImageUrl)
+            .profileImageUrl(request.getProfileImage())
             .walkPreferences(new ArrayList<>())
             .role(Role.USER)
             .build();
