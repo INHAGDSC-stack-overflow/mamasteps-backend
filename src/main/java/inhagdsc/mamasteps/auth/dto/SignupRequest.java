@@ -1,8 +1,6 @@
 package inhagdsc.mamasteps.auth.dto;
 
 import inhagdsc.mamasteps.user.entity.enums.ActivityLevel;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -35,6 +33,7 @@ public class SignupRequest {
   private String guardianPhoneNumber; // 보호자 전화번호
   @NotNull
   private ActivityLevel activityLevel; // 활동량
+  private String profileImage;
   private List<WalkPreferenceRequest> walkPreferences; //산책 선호 시간
 
 }

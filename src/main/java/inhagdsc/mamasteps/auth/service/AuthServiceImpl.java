@@ -35,11 +35,10 @@ public class AuthServiceImpl implements AuthService {
   private final PasswordEncoder passwordEncoder;
   private final AuthenticationManager authenticationManager;
   private final JwtProvider jwtProvider;
-  private final StorageProvider storageProvider;
 
   @Override
-  public SignupResponse signup(MultipartFile profileImage, SignupRequest request) {
-    User user = createUser(request, storageProvider.fileUpload(profileImage, PROFILE));
+  public SignupResponse signup(SignupRequest request) {
+    User user = createUser(request);
     createWalkPreferences(request, user);
     User savedUser = userRepository.save(user);
     createtoken token = getCreateToken(savedUser);
@@ -65,8 +64,7 @@ public class AuthServiceImpl implements AuthService {
     return AuthConverter.toGoogleLoginResponse(user, token.accessToken);
   }
 
-
-  private User createUser(SignupRequest request, String prifleImageUrl) {
+  private User createUser(SignupRequest request) {
     userRepository.findByEmail(request.getEmail()).ifPresent(user -> {
       throw new UserHandler(USER_ALREADY_EXIST);});
     return User.builder()
@@ -77,7 +75,7 @@ public class AuthServiceImpl implements AuthService {
             .pregnancyStartDate(request.getPregnancyStartDate())
             .guardianPhoneNumber(request.getGuardianPhoneNumber())
             .activityLevel(request.getActivityLevel())
-            .profileImageUrl(prifleImageUrl)
+            .profileImageUrl(request.getProfileImage())
             .walkPreferences(new ArrayList<>())
             .role(Role.USER)
             .build();
