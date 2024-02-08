@@ -41,6 +41,8 @@ public class StorageProvider {
         return url;
     }
 
+
+
     public boolean deleteFile(String fileName) {
         log.info("deleteFile api 호출");
         Storage storage = StorageOptions.newBuilder().setProjectId(storageProperties.getProjectId()).build().getService();

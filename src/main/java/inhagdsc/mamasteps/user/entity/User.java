@@ -4,6 +4,7 @@ import inhagdsc.mamasteps.common.BaseTimeEntity;
 import inhagdsc.mamasteps.user.entity.enums.ActivityLevel;
 import inhagdsc.mamasteps.user.entity.enums.Role;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -21,7 +22,7 @@ import java.util.List;
 @AllArgsConstructor
 @Entity
 @Getter
-@Table(name = "users")
+@Table(name = "users", uniqueConstraints = {@UniqueConstraint(columnNames = "email")})
 public class User extends BaseTimeEntity implements UserDetails {
 
     @Id
@@ -29,6 +30,8 @@ public class User extends BaseTimeEntity implements UserDetails {
     @Column(name = "user_id")
     private Long id;
 
+    @Column(nullable = false)
+    @Email
     private String email; //이메일(아이디)
     private String password; // 비밀번호
     private String name; // 이름
