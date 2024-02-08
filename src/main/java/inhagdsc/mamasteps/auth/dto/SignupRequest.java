@@ -24,6 +24,7 @@ public class SignupRequest {
   private LocalDateTime pregnancyStartDate; // 임신 시작일
   private String guardianPhoneNumber; // 보호자 전화번호
   private ActivityLevel activityLevel; // 활동량
+  private String profileImage;
   private List<WalkPreferenceRequest> walkPreferences; //산책 선호 시간
 
 }
