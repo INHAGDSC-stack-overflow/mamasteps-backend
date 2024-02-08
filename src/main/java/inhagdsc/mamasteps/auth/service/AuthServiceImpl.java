@@ -4,7 +4,6 @@ import inhagdsc.mamasteps.auth.dto.*;
 import inhagdsc.mamasteps.auth.jwt.JwtProvider;
 import inhagdsc.mamasteps.common.converter.AuthConverter;
 import inhagdsc.mamasteps.common.exception.handler.UserHandler;
-import inhagdsc.mamasteps.common.stroge.StorageProvider;
 import inhagdsc.mamasteps.user.entity.User;
 import inhagdsc.mamasteps.user.entity.WalkPreference;
 import inhagdsc.mamasteps.user.entity.enums.Role;
@@ -16,14 +15,12 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 
 import java.util.ArrayList;
 
 import static inhagdsc.mamasteps.common.code.status.ErrorStatus.USER_ALREADY_EXIST;
 import static inhagdsc.mamasteps.common.code.status.ErrorStatus.USER_NOT_FOUND;
-import static inhagdsc.mamasteps.common.stroge.StorageProvider.PROFILE;
 
 @Service
 @RequiredArgsConstructor
