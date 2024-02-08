@@ -15,7 +15,8 @@ spring:
         format_sql: true
     show-sql: true
 
-
+swagger:
+  server-url: https://dev.mamasteps.dev
 ---
 spring:
   config:
@@ -34,6 +35,8 @@ spring:
         format_sql: true
     show-sql: true
 
+swagger:
+  server-url: http://localhost:8080
 ---
 jwt:
   issuer: mamasteps@mamasteps.com

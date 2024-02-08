@@ -7,6 +7,7 @@ import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
 import org.springdoc.core.models.GroupedOpenApi;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
@@ -17,6 +18,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class SwaggerConfig implements WebMvcConfigurer {
 
     private static final String SECURITY_SCHEME_NAME = "authorization";	// 추가
+
+    @Value("${swagger.server-url}")
+    private String serverUrl;
 
     @Bean
     public GroupedOpenApi jwtApi() {
@@ -29,8 +33,7 @@ public class SwaggerConfig implements WebMvcConfigurer {
     public OpenAPI OpenApi() {
 
         return new OpenAPI()
-                .addServersItem(new Server().url("/"))
-                .addServersItem(new Server().url("https://*.mamasteps.dev"))
+                .addServersItem(new Server().url(serverUrl))
                 .components(new Components()
                         // 여기부터 추가 부분
                         .addSecuritySchemes(SECURITY_SCHEME_NAME, new SecurityScheme()
