@@ -22,8 +22,6 @@ public class SignupRequest {
   @Email
   private String email;
   @NotBlank
-  private String password;
-  @NotBlank
   private String name; // 이름
   @NotNull
   private Integer age; // 나이

@@ -66,7 +66,6 @@ public class AuthServiceImpl implements AuthService {
       throw new UserHandler(USER_ALREADY_EXIST);});
     return User.builder()
             .email(request.getEmail())
-            .password(passwordEncoder.encode(request.getPassword()))
             .name(request.getName())
             .age(request.getAge())
             .pregnancyStartDate(request.getPregnancyStartDate())
