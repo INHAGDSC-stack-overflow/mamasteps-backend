@@ -20,8 +20,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 @Service
 @Profile("international")
@@ -40,6 +39,7 @@ public class InternationalRoutesService implements RoutesService {
         this.webClient = webClientBuilder.baseUrl("https://routes.googleapis.com").build();
         this.waypointGenerator = waypointGenerator;
     }
+
     @Override
     public ObjectNode computeRoutes(RouteRequestDto routeRequestDto) throws RuntimeException, JsonProcessingException {
         RouteRequestEntity originRouteRequestEntity = routeRequestDto.toEntity();
@@ -58,11 +58,11 @@ public class InternationalRoutesService implements RoutesService {
 
             String requestBody = buildRequestBody(routeRequestEntity);
             try {
-                if(GET_POLYLINE_DIRECTLY){
+                if (GET_POLYLINE_DIRECTLY) {
                     ObjectNode route = getRouteFromResponseDirectly(postAPIRequest(requestBody));
                     routesArray.add(route);
                 }
-                if(!GET_POLYLINE_DIRECTLY){
+                if (!GET_POLYLINE_DIRECTLY) {
                     ObjectNode route = getRoute(parseApiResponse(postAPIRequest(requestBody)));
                     routesArray.add(route);
                 }
@@ -71,7 +71,9 @@ public class InternationalRoutesService implements RoutesService {
             }
         }
 
-        result.set("polylines", routesArray);
+        ArrayNode sortedRoutesArray = sortRoutesArrayByTime(routesArray);
+        deduplicateRoutes(sortedRoutesArray);
+        result.set("polylines", sortedRoutesArray);
         return result;
     }
 
@@ -158,5 +160,34 @@ public class InternationalRoutesService implements RoutesService {
         result.put("totalDistanceMeters", coordinates.path("totalDistanceMeters").asDouble());
 
         return result;
+    }
+
+    private ArrayNode sortRoutesArrayByTime(ArrayNode routesArray) {
+        List<JsonNode> list = new ArrayList<>();
+        routesArray.forEach(list::add);
+
+        Collections.sort(list, new Comparator<JsonNode>() {
+            @Override
+            public int compare(JsonNode o1, JsonNode o2) {
+                return Integer.compare(o1.get("totalTimeSeconds").asInt(), o2.get("totalTimeSeconds").asInt());
+            }
+        });
+
+        ObjectMapper mapper = new ObjectMapper();
+        ArrayNode sortedRoutesArray = mapper.createArrayNode();
+        list.forEach(sortedRoutesArray::add);
+
+        return sortedRoutesArray;
+    }
+
+    private void deduplicateRoutes(ArrayNode routesArray) {
+        for (int i = 0; i < routesArray.size() - 1; i++) {
+            JsonNode current = routesArray.get(i);
+            JsonNode next = routesArray.get(i + 1);
+            if (current.get("encodedPolyline").asText().equals(next.get("encodedPolyline").asText())) {
+                routesArray.remove(i + 1);
+                i--;
+            }
+        }
     }
 }
