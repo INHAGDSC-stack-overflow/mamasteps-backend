@@ -18,7 +18,6 @@ public class UpdateWalkPreferenceRequest {
     private DayOfWeek dayOfWeek;
     private String startTime;
     private String endTime;
-
     public WalkPreference toEntity() {
         return WalkPreference.builder()
                 .dayOfWeek(this.dayOfWeek)

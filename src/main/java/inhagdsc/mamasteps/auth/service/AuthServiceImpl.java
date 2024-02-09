@@ -61,7 +61,6 @@ public class AuthServiceImpl implements AuthService {
     return AuthConverter.toGoogleLoginResponse(user, token.accessToken);
   }
 
-
   private User createUser(SignupRequest request) {
     userRepository.findByEmail(request.getEmail()).ifPresent(user -> {
       throw new UserHandler(USER_ALREADY_EXIST);});
