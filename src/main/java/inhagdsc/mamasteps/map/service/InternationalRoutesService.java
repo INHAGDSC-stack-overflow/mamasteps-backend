@@ -50,11 +50,12 @@ public class InternationalRoutesService implements RoutesService {
         ObjectNode result = mapper.createObjectNode();
         ArrayNode routesArray = mapper.createArrayNode();
         for (LatLng waypoint : createdWaypoints) {
-            RouteRequestDto routeRequestEntity = new RouteRequestDto();
+            RouteRequestEntity routeRequestEntity = new RouteRequestEntity();
             routeRequestEntity.setTargetTime(originRouteRequestEntity.getTargetTime());
             routeRequestEntity.setOrigin(originRouteRequestEntity.getOrigin().clone());
-            routeRequestEntity.setIntermediates(LatLng.deepCopyList(originRouteRequestEntity.getIntermediates()));
-            routeRequestEntity.getIntermediates().add(waypoint);
+            routeRequestEntity.setStartCloseIntermediates(LatLng.deepCopyList(originRouteRequestEntity.getStartCloseIntermediates()));
+            routeRequestEntity.setEndCloseIntermediates(LatLng.deepCopyList(originRouteRequestEntity.getEndCloseIntermediates()));
+            routeRequestEntity.getStartCloseIntermediates().add(waypoint);
 
             String requestBody = buildRequestBody(routeRequestEntity);
             try {
@@ -77,8 +78,8 @@ public class InternationalRoutesService implements RoutesService {
         return result;
     }
 
-    private String buildRequestBody(RouteRequestDto routeRequestDto) {
-        JSONObject json = routeRequestDto.toEntity().toGoogleJson();
+    private String buildRequestBody(RouteRequestEntity routeRequestEntity) {
+        JSONObject json = routeRequestEntity.toGoogleJson();
         json.put("travelMode", "WALK");
         json.put("routingPreference", "ROUTING_PREFERENCE_UNSPECIFIED");
         json.put("computeAlternativeRoutes", false);

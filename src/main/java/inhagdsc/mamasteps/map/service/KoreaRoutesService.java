@@ -47,11 +47,12 @@ public class KoreaRoutesService implements RoutesService {
         ObjectNode result = mapper.createObjectNode();
         ArrayNode routesArray = mapper.createArrayNode();
         for (LatLng waypoint : createdWaypoints) {
-            RouteRequestDto routeRequestEntity = new RouteRequestDto();
+            RouteRequestEntity routeRequestEntity = new RouteRequestEntity();
             routeRequestEntity.setTargetTime(originRouteRequestEntity.getTargetTime());
             routeRequestEntity.setOrigin(originRouteRequestEntity.getOrigin().clone());
-            routeRequestEntity.setIntermediates(LatLng.deepCopyList(originRouteRequestEntity.getIntermediates()));
-            routeRequestEntity.getIntermediates().add(waypoint);
+            routeRequestEntity.setStartCloseIntermediates(LatLng.deepCopyList(originRouteRequestEntity.getStartCloseIntermediates()));
+            routeRequestEntity.setEndCloseIntermediates(LatLng.deepCopyList(originRouteRequestEntity.getEndCloseIntermediates()));
+            routeRequestEntity.getStartCloseIntermediates().add(waypoint);
 
             MultiValueMap<String, String> requestBody = buildRequestBody(routeRequestEntity);
             try {
@@ -68,8 +69,8 @@ public class KoreaRoutesService implements RoutesService {
         return result;
     }
 
-    private MultiValueMap<String, String> buildRequestBody(RouteRequestDto routeRequestDto) {
-        MultiValueMap<String, String> formData = routeRequestDto.toEntity().toTmapValueMap();
+    private MultiValueMap<String, String> buildRequestBody(RouteRequestEntity routeRequestEntity) {
+        MultiValueMap<String, String> formData = routeRequestEntity.toTmapValueMap();
         formData.add("speed", "35");
         formData.add("startName", "origin");
         formData.add("endName", "destination");
