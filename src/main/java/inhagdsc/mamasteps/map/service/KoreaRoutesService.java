@@ -18,6 +18,9 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -59,7 +62,9 @@ public class KoreaRoutesService implements RoutesService {
             }
         }
 
-        result.set("polylines", routesArray);
+        ArrayNode sortedRoutesArray = sortRoutesArrayByTime(routesArray);
+        deduplicateRoutes(sortedRoutesArray);
+        result.set("polylines", sortedRoutesArray);
         return result;
     }
 
@@ -129,5 +134,34 @@ public class KoreaRoutesService implements RoutesService {
         result.put("totalDistanceMeters", coordinates.path("totalDistanceMeters").asDouble());
 
         return result;
+    }
+
+    private ArrayNode sortRoutesArrayByTime(ArrayNode routesArray) {
+        List<JsonNode> list = new ArrayList<>();
+        routesArray.forEach(list::add);
+
+        Collections.sort(list, new Comparator<JsonNode>() {
+            @Override
+            public int compare(JsonNode o1, JsonNode o2) {
+                return Integer.compare(o1.get("totalTimeSeconds").asInt(), o2.get("totalTimeSeconds").asInt());
+            }
+        });
+
+        ObjectMapper mapper = new ObjectMapper();
+        ArrayNode sortedRoutesArray = mapper.createArrayNode();
+        list.forEach(sortedRoutesArray::add);
+
+        return sortedRoutesArray;
+    }
+
+    private void deduplicateRoutes(ArrayNode routesArray) {
+        for (int i = 0; i < routesArray.size() - 1; i++) {
+            JsonNode current = routesArray.get(i);
+            JsonNode next = routesArray.get(i + 1);
+            if (current.get("encodedPolyline").asText().equals(next.get("encodedPolyline").asText())) {
+                routesArray.remove(i + 1);
+                i--;
+            }
+        }
     }
 }
