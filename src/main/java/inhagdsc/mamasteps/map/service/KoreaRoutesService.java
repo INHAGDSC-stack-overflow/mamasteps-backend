@@ -41,7 +41,12 @@ public class KoreaRoutesService implements RoutesService {
     public ObjectNode computeRoutes(RouteRequestDto routeRequestDto) throws IOException {
         RouteRequestEntity originRouteRequestEntity = routeRequestDto.toEntity();
         waypointGenerator.setRouteRequestEntity(originRouteRequestEntity);
+        boolean timeOverflow = false;
         List<LatLng> createdWaypoints = waypointGenerator.getSurroundingWaypoints();
+        if (createdWaypoints.isEmpty()) {
+            timeOverflow = true;
+            createdWaypoints.add(originRouteRequestEntity.getOrigin());
+        }
 
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode result = mapper.createObjectNode();
@@ -52,7 +57,9 @@ public class KoreaRoutesService implements RoutesService {
             routeRequestEntity.setOrigin(originRouteRequestEntity.getOrigin().clone());
             routeRequestEntity.setStartCloseIntermediates(LatLng.deepCopyList(originRouteRequestEntity.getStartCloseIntermediates()));
             routeRequestEntity.setEndCloseIntermediates(LatLng.deepCopyList(originRouteRequestEntity.getEndCloseIntermediates()));
-            routeRequestEntity.getStartCloseIntermediates().add(waypoint);
+            if (!timeOverflow) {
+                routeRequestEntity.getStartCloseIntermediates().add(waypoint);
+            }
 
             MultiValueMap<String, String> requestBody = buildRequestBody(routeRequestEntity);
             try {
@@ -65,7 +72,8 @@ public class KoreaRoutesService implements RoutesService {
 
         ArrayNode sortedRoutesArray = sortRoutesArrayByTime(routesArray);
         deduplicateRoutes(sortedRoutesArray);
-        result.set("polylines", sortedRoutesArray);
+        result.put("timeOverflow", timeOverflow);
+        result.put("polylines", sortedRoutesArray);
         return result;
     }
 
