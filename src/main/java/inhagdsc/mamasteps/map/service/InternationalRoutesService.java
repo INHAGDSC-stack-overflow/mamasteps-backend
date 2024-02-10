@@ -65,6 +65,21 @@ public class InternationalRoutesService implements RoutesService {
     }
 
     @Override
+    public List<RoutesProfileDto> getProfiles(Long userId) {
+        List<RoutesProfileEntity> routesProfileEntities = routesProfileRepository.findAllByUserId(userId);
+
+        List<RoutesProfileDto> routesProfileDtos = new ArrayList<>();
+        if (routesProfileEntities.isEmpty()) {
+            routesProfileDtos.add(createProfile(userId, 0));
+        }
+        for (RoutesProfileEntity entity : routesProfileEntities) {
+            routesProfileDtos.add(entity.toDto());
+        }
+
+        return routesProfileDtos;
+    }
+
+    @Override
     public ObjectNode computeRoutes(RouteRequestDto routeRequestDto) throws RuntimeException, JsonProcessingException {
         RouteRequestEntity originRouteRequestEntity = routeRequestDto.toEntity();
         waypointGenerator.setRouteRequestEntity(originRouteRequestEntity);

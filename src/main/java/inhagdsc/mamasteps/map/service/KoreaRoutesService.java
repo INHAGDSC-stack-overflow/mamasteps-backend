@@ -52,12 +52,29 @@ public class KoreaRoutesService implements RoutesService {
         RoutesProfileEntity routesProfileEntity = new RoutesProfileEntity();
         routesProfileEntity.setUser(userRepository.findById(userId).get());
         routesProfileEntity.setProfileName("새 산책 프로필 " + (currentNumber + 1));
+        routesProfileEntity.setStartCloseWaypoints(new ArrayList<>());
+        routesProfileEntity.setEndCloseWaypoints(new ArrayList<>());
         String now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         routesProfileEntity.setCreatedAt(now);
         routesProfileEntity.setUpdatedAt(now);
 
         routesProfileRepository.save(routesProfileEntity);
         return routesProfileEntity.toDto();
+    }
+
+    @Override
+    public List<RoutesProfileDto> getProfiles(Long userId) {
+        List<RoutesProfileEntity> routesProfileEntities = routesProfileRepository.findAllByUserId(userId);
+
+        List<RoutesProfileDto> routesProfileDtos = new ArrayList<>();
+        if (routesProfileEntities.isEmpty()) {
+            routesProfileDtos.add(createProfile(userId, 0));
+        }
+        for (RoutesProfileEntity entity : routesProfileEntities) {
+            routesProfileDtos.add(entity.toDto());
+        }
+
+        return routesProfileDtos;
     }
 
     @Override

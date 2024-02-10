@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/routes")
@@ -30,8 +31,14 @@ public class RoutesController {
     }
 
     @GetMapping("/newProfile/{currentNumber}")
-    public RoutesProfileDto createProfile(@AuthenticationPrincipal User user, @PathVariable int currentNumber, HttpServletRequest request) {
+    public RoutesProfileDto createProfile(@AuthenticationPrincipal User user, @PathVariable int currentNumber) {
         return routesService.createProfile(user.getId(), currentNumber);
+    }
+
+    @GetMapping("/getProfiles")
+    public List<RoutesProfileDto> getProfiles(@AuthenticationPrincipal User user) {
+        List<RoutesProfileDto> response = routesService.getProfiles(user.getId());
+        return response;
     }
 
     @PostMapping("/computeRoutes")
