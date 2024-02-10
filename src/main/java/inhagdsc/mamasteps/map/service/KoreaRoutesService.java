@@ -79,6 +79,20 @@ public class KoreaRoutesService implements RoutesService {
     }
 
     @Override
+    public void editProfile(Long userId, Long profileId, RoutesProfileDto routesProfileDto) {
+        RoutesProfileEntity profile = routesProfileRepository.findAllByUserId(userId).stream()
+                .filter(routesProfileEntity -> routesProfileEntity.getId().equals(profileId))
+                .findFirst()
+                .orElseThrow(() -> new EntityNotFoundException("Profile with ID " + profileId + " not found for User ID " + userId));
+        profile.setProfileName(routesProfileDto.getProfileName());
+        profile.setTargetTime(routesProfileDto.getTargetTime());
+        profile.setStartCloseWaypoints(routesProfileDto.getStartCloseWaypoints());
+        profile.setEndCloseWaypoints(routesProfileDto.getEndCloseWaypoints());
+        profile.setUpdatedAt(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        routesProfileRepository.save(profile);
+    }
+
+    @Override
     public void deleteProfile(Long userId, Long profileId) {
         RoutesProfileEntity profile = routesProfileRepository.findAllByUserId(userId).stream()
                 .filter(routesProfileEntity -> routesProfileEntity.getId().equals(profileId))
