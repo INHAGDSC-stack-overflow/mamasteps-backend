@@ -6,43 +6,51 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import inhagdsc.mamasteps.map.domain.LatLng;
-import inhagdsc.mamasteps.map.domain.RoutesProfileEntity;
 import inhagdsc.mamasteps.map.dto.RouteRequestDto;
 import inhagdsc.mamasteps.map.domain.RouteRequestEntity;
+import inhagdsc.mamasteps.map.domain.RoutesProfileEntity;
 import inhagdsc.mamasteps.map.dto.RoutesProfileDto;
 import inhagdsc.mamasteps.map.repository.RoutesProfileRepository;
 import inhagdsc.mamasteps.map.service.tool.PolylineEncoder;
 import inhagdsc.mamasteps.map.service.tool.waypoint.WaypointGenerator;
 import inhagdsc.mamasteps.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 @Service
-@Profile("korea")
-public class KoreaRoutesService implements RoutesService {
+public class RoutesServiceImpl implements RoutesService {
+    @Value("${GOOGLE_API_KEY}")
+    private String googleApiKey;
+    @Value("${REQUEST_FIELDMASK}")
+    private String REQUEST_FIELDMASK;
+    @Value("${GET_POLYLINE_DIRECTLY}")
+    private boolean GET_POLYLINE_DIRECTLY;
+
     @Value("${TMAP_API_KEY}")
-    private String apiKey;
-    private final WebClient webClient;
+    private String tmapApiKey;
+
+    private final WebClient googleWebClient;
+    private final WebClient tmapWebClient;
     private final WaypointGenerator waypointGenerator;
     private final RoutesProfileRepository routesProfileRepository;
     private final UserRepository userRepository;
 
     @Autowired
-    public KoreaRoutesService(WebClient.Builder webClientBuilder, WaypointGenerator waypointGenerator, RoutesProfileRepository routesProfileRepository, UserRepository userRepository) {
-        this.webClient = webClientBuilder.baseUrl("https://apis.openapi.sk.com").build();
+    public RoutesServiceImpl(WebClient.Builder webClientBuilder, WaypointGenerator waypointGenerator, RoutesProfileRepository routesProfileRepository, UserRepository userRepository) {
+        this.googleWebClient = webClientBuilder.baseUrl("https://routes.googleapis.com").build();
+        this.tmapWebClient = webClientBuilder.baseUrl("https://apis.openapi.sk.com").build();
         this.waypointGenerator = waypointGenerator;
         this.routesProfileRepository = routesProfileRepository;
         this.userRepository = userRepository;
@@ -105,6 +113,18 @@ public class KoreaRoutesService implements RoutesService {
     public ObjectNode computeRoutes(RouteRequestDto routeRequestDto) throws IOException {
         RouteRequestEntity originRouteRequestEntity = routeRequestDto.toEntity();
         waypointGenerator.setRouteRequestEntity(originRouteRequestEntity);
+
+        double originLatitude = originRouteRequestEntity.getOrigin().getLatitude();
+        double originLongitude = originRouteRequestEntity.getOrigin().getLongitude();
+        if ((originLatitude > 33 && originLatitude < 39) && (originLongitude > 124 && originLongitude < 132)) {
+            return computeRoutesUsingTmap(originRouteRequestEntity);
+        } else {
+            return computeRoutesUsingGoogle(originRouteRequestEntity);
+        }
+
+    }
+
+    private ObjectNode computeRoutesUsingGoogle(RouteRequestEntity originRouteRequestEntity) throws IOException {
         boolean timeOverflow = false;
         List<LatLng> createdWaypoints = waypointGenerator.getSurroundingWaypoints();
         if (createdWaypoints.isEmpty()) {
@@ -125,9 +145,52 @@ public class KoreaRoutesService implements RoutesService {
                 routeRequestEntity.getStartCloseIntermediates().add(waypoint);
             }
 
-            MultiValueMap<String, String> requestBody = buildRequestBody(routeRequestEntity);
+            String requestBody = buildGoogleRequestBody(routeRequestEntity);
             try {
-                ObjectNode route = getRoute(parseApiResponse(postAPIRequest(requestBody)));
+                if (GET_POLYLINE_DIRECTLY) {
+                    ObjectNode route = getRouteFromResponseDirectly(postGoogleAPIRequest(requestBody));
+                    routesArray.add(route);
+                }
+                if (!GET_POLYLINE_DIRECTLY) {
+                    ObjectNode route = getRoute(parseGoogleApiResponse(postGoogleAPIRequest(requestBody)));
+                    routesArray.add(route);
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        ArrayNode sortedRoutesArray = sortRoutesArrayByTime(routesArray);
+        deduplicateRoutes(sortedRoutesArray);
+        result.put("timeOverflow", timeOverflow);
+        result.put("polylines", sortedRoutesArray);
+        return result;
+    }
+
+    private ObjectNode computeRoutesUsingTmap(RouteRequestEntity originRouteRequestEntity) throws IOException {
+        boolean timeOverflow = false;
+        List<LatLng> createdWaypoints = waypointGenerator.getSurroundingWaypoints();
+        if (createdWaypoints.isEmpty()) {
+            timeOverflow = true;
+            createdWaypoints.add(originRouteRequestEntity.getOrigin());
+        }
+
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode result = mapper.createObjectNode();
+        ArrayNode routesArray = mapper.createArrayNode();
+        for (LatLng waypoint : createdWaypoints) {
+            RouteRequestEntity routeRequestEntity = new RouteRequestEntity();
+            routeRequestEntity.setTargetTime(originRouteRequestEntity.getTargetTime());
+            routeRequestEntity.setOrigin(originRouteRequestEntity.getOrigin().clone());
+            routeRequestEntity.setStartCloseIntermediates(LatLng.deepCopyList(originRouteRequestEntity.getStartCloseIntermediates()));
+            routeRequestEntity.setEndCloseIntermediates(LatLng.deepCopyList(originRouteRequestEntity.getEndCloseIntermediates()));
+            if (!timeOverflow) {
+                routeRequestEntity.getStartCloseIntermediates().add(waypoint);
+            }
+
+            MultiValueMap<String, String> requestBody = buildTmapRequestBody(routeRequestEntity);
+            try {
+                ObjectNode route = getRoute(parseTmapApiResponse(postTmapAPIRequest(requestBody)));
                 routesArray.add(route);
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -141,7 +204,17 @@ public class KoreaRoutesService implements RoutesService {
         return result;
     }
 
-    private MultiValueMap<String, String> buildRequestBody(RouteRequestEntity routeRequestEntity) {
+    private String buildGoogleRequestBody(RouteRequestEntity routeRequestEntity) {
+        JSONObject json = routeRequestEntity.toGoogleJson();
+        json.put("travelMode", "WALK");
+        json.put("routingPreference", "ROUTING_PREFERENCE_UNSPECIFIED");
+        json.put("computeAlternativeRoutes", false);
+        json.put("languageCode", "en-US");
+        json.put("units", "METRIC");
+        return json.toString();
+    }
+
+    private MultiValueMap<String, String> buildTmapRequestBody(RouteRequestEntity routeRequestEntity) {
         MultiValueMap<String, String> formData = routeRequestEntity.toTmapValueMap();
         formData.add("speed", "35");
         formData.add("startName", "origin");
@@ -149,11 +222,23 @@ public class KoreaRoutesService implements RoutesService {
         return formData;
     }
 
-    private String postAPIRequest(MultiValueMap<String, String> requestBody) {
-        return webClient.post()
+    private String postGoogleAPIRequest(String requestBody) {
+        return googleWebClient.post()
+                .uri("/directions/v2:computeRoutes")
+                .header("Content-Type", "application/json")
+                .header("X-Goog-Api-Key", googleApiKey)
+                .header("X-Goog-FieldMask", REQUEST_FIELDMASK)
+                .body(Mono.just(requestBody), String.class)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+    }
+
+    private String postTmapAPIRequest(MultiValueMap<String, String> requestBody) {
+        return tmapWebClient.post()
                 .uri("/tmap/routes/pedestrian?version=1")
                 .header("Content-Type", "application/x-www-form-urlencoded")
-                .header("appKey", apiKey)
+                .header("appKey", tmapApiKey)
                 .header("Accept-Language", "ko")
                 .bodyValue(requestBody)
                 .retrieve()
@@ -161,7 +246,58 @@ public class KoreaRoutesService implements RoutesService {
                 .block();
     }
 
-    private ObjectNode parseApiResponse(String apiResponse) throws JsonProcessingException {
+    private ObjectNode getRouteFromResponseDirectly(String apiResponse) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode rootNode = mapper.readTree(apiResponse);
+
+        JsonNode route = rootNode.path("routes").get(0);
+        double totalDistance = route.path("distanceMeters").asDouble();
+        int totalTime = Integer.parseInt(route.path("duration").asText().replace("s", ""));
+        String polyline = route.path("polyline").path("encodedPolyline").asText();
+
+        ObjectNode result = mapper.createObjectNode();
+        result.put("encodedPolyline", polyline);
+        result.put("totalTimeSeconds", totalTime);
+        result.put("totalDistanceMeters", totalDistance);
+
+        return result;
+    }
+
+    private ObjectNode parseGoogleApiResponse(String apiResponse) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode rootNode = mapper.readTree(apiResponse);
+
+        JsonNode route = rootNode.path("routes").get(0);
+        double totalDistance = route.path("distanceMeters").asDouble();
+        int totalTime = Integer.parseInt(route.path("duration").asText().replace("s", ""));
+
+        ObjectNode result = mapper.createObjectNode();
+        ArrayNode coordinates = mapper.createArrayNode();
+
+        JsonNode legs = route.path("legs");
+        for (JsonNode leg : legs) {
+            JsonNode steps = leg.path("steps");
+            for (JsonNode step : steps) {
+                JsonNode startLocation = step.path("startLocation").path("latLng");
+                double startLatitude = startLocation.path("latitude").asDouble();
+                double startLongitude = startLocation.path("longitude").asDouble();
+                coordinates.add(mapper.createObjectNode().put("latitude", startLatitude).put("longitude", startLongitude));
+
+                JsonNode endLocation = step.path("endLocation").path("latLng");
+                double endLatitude = endLocation.path("latitude").asDouble();
+                double endLongitude = endLocation.path("longitude").asDouble();
+                coordinates.add(mapper.createObjectNode().put("latitude", endLatitude).put("longitude", endLongitude));
+            }
+        }
+
+        result.set("coordinates", coordinates);
+        result.put("totalTimeSeconds", totalTime);
+        result.put("totalDistanceMeters", totalDistance);
+
+        return result;
+    }
+
+    private ObjectNode parseTmapApiResponse(String apiResponse) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode rootNode = mapper.readTree(apiResponse);
 
