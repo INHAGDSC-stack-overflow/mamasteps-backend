@@ -1,4 +1,7 @@
-package inhagdsc.mamasteps.map.domain;
+package inhagdsc.mamasteps.map.dto;
+
+import inhagdsc.mamasteps.map.domain.LatLng;
+import inhagdsc.mamasteps.map.domain.RouteRequestEntity;
 
 import java.util.List;
 
