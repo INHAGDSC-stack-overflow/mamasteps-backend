@@ -1,5 +1,6 @@
 package inhagdsc.mamasteps.map.domain;
 
+import inhagdsc.mamasteps.map.dto.RouteRequestDto;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.util.LinkedMultiValueMap;
