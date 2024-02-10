@@ -1,32 +1,33 @@
 package inhagdsc.mamasteps.map.domain.converter;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import inhagdsc.mamasteps.map.domain.LatLng;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
+import java.lang.reflect.Type;
+import java.util.Collections;
 import java.util.List;
 
 @Converter(autoApply = true)
 public class LatLngListConverter implements AttributeConverter<List<LatLng>, String> {
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final Gson gson = new Gson();
 
     @Override
     public String convertToDatabaseColumn(List<LatLng> attribute) {
-        try {
-            return objectMapper.writeValueAsString(attribute);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        if (attribute == null || attribute.isEmpty()) {
+            return null;
         }
+        return gson.toJson(attribute);
     }
 
     @Override
     public List<LatLng> convertToEntityAttribute(String dbData) {
-        try {
-            return objectMapper.readValue(dbData, new TypeReference<List<LatLng>>() {});
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        if (dbData == null || dbData.isEmpty()) {
+            return Collections.emptyList();
         }
+        Type listType = new TypeToken<List<LatLng>>(){}.getType();
+        return gson.fromJson(dbData, listType);
     }
 }
