@@ -2,6 +2,7 @@ package inhagdsc.mamasteps.map.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import inhagdsc.mamasteps.common.ApiResponse;
 import inhagdsc.mamasteps.map.dto.RouteRequestDto;
 import inhagdsc.mamasteps.map.domain.RoutesProfileEntity;
 import inhagdsc.mamasteps.map.dto.RoutesProfileDto;
@@ -19,6 +20,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+import static inhagdsc.mamasteps.common.code.status.ErrorStatus.FORBIDDEN;
+import static inhagdsc.mamasteps.common.code.status.SuccessStatus.CREATED;
+import static inhagdsc.mamasteps.common.code.status.SuccessStatus.OK;
+
 @RestController
 @RequestMapping("/api/v1/routes")
 public class RoutesController {
@@ -31,24 +36,29 @@ public class RoutesController {
     }
 
     @GetMapping("/newProfile/{currentNumber}")
-    public RoutesProfileDto createProfile(@AuthenticationPrincipal User user, @PathVariable int currentNumber) {
-        return routesService.createProfile(user.getId(), currentNumber);
+    public ApiResponse<RoutesProfileDto> createProfile(@AuthenticationPrincipal User user, @PathVariable int currentNumber) {
+        return ApiResponse.onSuccess(CREATED, routesService.createProfile(user.getId(), currentNumber));
     }
 
     @GetMapping("/getProfiles")
-    public List<RoutesProfileDto> getProfiles(@AuthenticationPrincipal User user) {
+    public ApiResponse<List<RoutesProfileDto>> getProfiles(@AuthenticationPrincipal User user) {
         List<RoutesProfileDto> response = routesService.getProfiles(user.getId());
-        return response;
+        return ApiResponse.onSuccess(OK, response);
     }
 
     @DeleteMapping("/deleteProfile/{profileId}")
-    public void deleteProfile(@AuthenticationPrincipal User user, @PathVariable Long profileId) {
-        routesService.deleteProfile(user.getId(), profileId);
+    public ApiResponse<Void> deleteProfile(@AuthenticationPrincipal User user, @PathVariable Long profileId) {
+        try {
+            routesService.deleteProfile(user.getId(), profileId);
+            return ApiResponse.onSuccess(OK, null);
+        } catch (Exception e) {
+            return ApiResponse.onFailure(FORBIDDEN.getCode(), e.getMessage(), null);
+        }
     }
 
     @PostMapping("/computeRoutes")
-    public ObjectNode getRoutes(@RequestBody RouteRequestDto routeRequestDto) throws IOException, JsonProcessingException {
+    public ApiResponse<ObjectNode> getRoutes(@RequestBody RouteRequestDto routeRequestDto) throws IOException, JsonProcessingException {
         ObjectNode response = routesService.computeRoutes(routeRequestDto);
-        return response;
+        return ApiResponse.onSuccess(OK, response);
     }
 }
