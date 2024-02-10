@@ -41,6 +41,11 @@ public class RoutesController {
         return response;
     }
 
+    @DeleteMapping("/deleteProfile/{profileId}")
+    public void deleteProfile(@AuthenticationPrincipal User user, @PathVariable Long profileId) {
+        routesService.deleteProfile(user.getId(), profileId);
+    }
+
     @PostMapping("/computeRoutes")
     public ObjectNode getRoutes(@RequestBody RouteRequestDto routeRequestDto) throws IOException, JsonProcessingException {
         ObjectNode response = routesService.computeRoutes(routeRequestDto);

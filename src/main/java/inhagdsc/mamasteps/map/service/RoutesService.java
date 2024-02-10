@@ -11,6 +11,7 @@ import java.util.List;
 public interface RoutesService {
     public RoutesProfileDto createProfile(Long userId, int currentNumber);
     public List<RoutesProfileDto> getProfiles(Long userId);
+    public void deleteProfile(Long userId, Long profileId);
     public ObjectNode computeRoutes(RouteRequestDto routeRequestDto) throws IOException;
 }
 

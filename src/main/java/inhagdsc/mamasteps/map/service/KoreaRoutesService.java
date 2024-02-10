@@ -14,6 +14,7 @@ import inhagdsc.mamasteps.map.repository.RoutesProfileRepository;
 import inhagdsc.mamasteps.map.service.tool.PolylineEncoder;
 import inhagdsc.mamasteps.map.service.tool.waypoint.WaypointGenerator;
 import inhagdsc.mamasteps.user.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
@@ -75,6 +76,15 @@ public class KoreaRoutesService implements RoutesService {
         }
 
         return routesProfileDtos;
+    }
+
+    @Override
+    public void deleteProfile(Long userId, Long profileId) {
+        RoutesProfileEntity profile = routesProfileRepository.findAllByUserId(userId).stream()
+                .filter(routesProfileEntity -> routesProfileEntity.getId().equals(profileId))
+                .findFirst()
+                .orElseThrow(() -> new EntityNotFoundException("Profile with ID " + profileId + " not found for User ID " + userId));
+        routesProfileRepository.delete(profile);
     }
 
     @Override
