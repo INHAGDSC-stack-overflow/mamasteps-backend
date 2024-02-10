@@ -2,21 +2,21 @@ package inhagdsc.mamasteps.map.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import inhagdsc.mamasteps.common.ApiResponse;
-import inhagdsc.mamasteps.common.code.status.SuccessStatus;
-import inhagdsc.mamasteps.map.domain.RouteRequestDto;
+import inhagdsc.mamasteps.map.dto.RouteRequestDto;
+import inhagdsc.mamasteps.map.domain.RoutesProfileEntity;
+import inhagdsc.mamasteps.map.dto.RoutesProfileDto;
 import inhagdsc.mamasteps.map.service.RoutesService;
+import inhagdsc.mamasteps.user.entity.User;
+import inhagdsc.mamasteps.user.repository.UserRepository;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import reactor.core.publisher.Mono;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-
-import static inhagdsc.mamasteps.common.code.status.SuccessStatus.*;
+import java.nio.charset.StandardCharsets;
 
 @RestController
 @RequestMapping("/api/v1/routes")
@@ -27,6 +27,11 @@ public class RoutesController {
     @Autowired
     public RoutesController(RoutesService routesService) {
         this.routesService = routesService;
+    }
+
+    @GetMapping("/newProfile/{currentNumber}")
+    public RoutesProfileDto createProfile(@AuthenticationPrincipal User user, @PathVariable int currentNumber, HttpServletRequest request) {
+        return routesService.createProfile(user.getId(), currentNumber);
     }
 
     @PostMapping("/computeRoutes")

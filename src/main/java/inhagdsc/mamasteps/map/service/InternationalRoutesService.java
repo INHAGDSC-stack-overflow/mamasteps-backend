@@ -5,12 +5,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.protobuf.FieldMask;
 import inhagdsc.mamasteps.map.domain.LatLng;
-import inhagdsc.mamasteps.map.domain.RouteRequestDto;
+import inhagdsc.mamasteps.map.dto.RouteRequestDto;
 import inhagdsc.mamasteps.map.domain.RouteRequestEntity;
+import inhagdsc.mamasteps.map.domain.RoutesProfileEntity;
+import inhagdsc.mamasteps.map.dto.RoutesProfileDto;
+import inhagdsc.mamasteps.map.repository.RoutesProfileRepository;
 import inhagdsc.mamasteps.map.service.tool.PolylineEncoder;
 import inhagdsc.mamasteps.map.service.tool.waypoint.WaypointGenerator;
+import inhagdsc.mamasteps.user.repository.UserRepository;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,6 +23,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
@@ -33,11 +38,30 @@ public class InternationalRoutesService implements RoutesService {
     private boolean GET_POLYLINE_DIRECTLY;
     private final WebClient webClient;
     private final WaypointGenerator waypointGenerator;
+    private final RoutesProfileRepository routesProfileRepository;
+    private final UserRepository userRepository;
 
     @Autowired
-    public InternationalRoutesService(WebClient.Builder webClientBuilder, WaypointGenerator waypointGenerator) {
+    public InternationalRoutesService(WebClient.Builder webClientBuilder, WaypointGenerator waypointGenerator, RoutesProfileRepository routesProfileRepository, UserRepository userRepository) {
         this.webClient = webClientBuilder.baseUrl("https://routes.googleapis.com").build();
         this.waypointGenerator = waypointGenerator;
+        this.routesProfileRepository = routesProfileRepository;
+        this.userRepository = userRepository;
+    }
+
+    @Override
+    public RoutesProfileDto createProfile(Long userId, int currentNumber) {
+        RoutesProfileEntity routesProfileEntity = new RoutesProfileEntity();
+        routesProfileEntity.setUser(userRepository.findById(userId).get());
+        routesProfileEntity.setProfileName("새 산책 프로필 " + (currentNumber + 1));
+        routesProfileEntity.setStartCloseWaypoints(new ArrayList<>());
+        routesProfileEntity.setEndCloseWaypoints(new ArrayList<>());
+        String now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        routesProfileEntity.setCreatedAt(now);
+        routesProfileEntity.setUpdatedAt(now);
+
+        routesProfileRepository.save(routesProfileEntity);
+        return routesProfileEntity.toDto();
     }
 
     @Override
