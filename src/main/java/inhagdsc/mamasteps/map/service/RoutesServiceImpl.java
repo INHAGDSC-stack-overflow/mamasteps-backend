@@ -94,6 +94,7 @@ public class RoutesServiceImpl implements RoutesService {
                 .orElseThrow(() -> new EntityNotFoundException("Profile with ID " + profileId + " not found for User ID " + userId));
         profile.setProfileName(routesProfileDto.getProfileName());
         profile.setTargetTime(routesProfileDto.getTargetTime());
+        profile.setOrigin(routesProfileDto.getOrigin());
         profile.setStartCloseWaypoints(routesProfileDto.getStartCloseWaypoints());
         profile.setEndCloseWaypoints(routesProfileDto.getEndCloseWaypoints());
         profile.setUpdatedAt(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));

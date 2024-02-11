@@ -1,5 +1,6 @@
 package inhagdsc.mamasteps.map.domain;
 
+import inhagdsc.mamasteps.map.domain.converter.LatLngConverter;
 import inhagdsc.mamasteps.map.domain.converter.LatLngListConverter;
 import inhagdsc.mamasteps.map.dto.RoutesProfileDto;
 import inhagdsc.mamasteps.user.entity.User;
@@ -8,20 +9,22 @@ import jakarta.persistence.*;
 import java.util.List;
 
 @Entity
+@Table(name = "routes_profile")
 public class RoutesProfileEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "routes_profile_id")
+    @Column(name = "routes_profile_id", nullable = false)
     private Long id;
     @ManyToOne
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
-    @Column
-    @JoinColumn(name = "profile_name")
+    @Column(name = "profile_name")
     private String profileName;
-    @Column
-    @JoinColumn(name = "target_time")
+    @Column(name = "target_time")
     private int targetTime;
+    @Column(name = "origin", columnDefinition = "json")
+    @Convert(converter = LatLngConverter.class)
+    private LatLng origin;
     @Column(name = "waypoints_startclose", columnDefinition = "json")
     @Convert(converter = LatLngListConverter.class)
     private List<LatLng> startCloseWaypoints;
@@ -36,9 +39,9 @@ public class RoutesProfileEntity {
     public RoutesProfileDto toDto() {
         RoutesProfileDto dto = new RoutesProfileDto();
         dto.setId(this.getId());
-        dto.setUserId(this.getUser().getId());
         dto.setProfileName(this.getProfileName());
         dto.setTargetTime(this.getTargetTime());
+        dto.setOrigin(this.getOrigin());
         dto.setStartCloseWaypoints(this.getStartCloseWaypoints());
         dto.setEndCloseWaypoints(this.getEndCloseWaypoints());
         dto.setCreatedAt(this.getCreatedAt());
@@ -108,5 +111,13 @@ public class RoutesProfileEntity {
 
     public void setUpdatedAt(String updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public LatLng getOrigin() {
+        return origin;
+    }
+
+    public void setOrigin(LatLng origin) {
+        this.origin = origin;
     }
 }

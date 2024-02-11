@@ -6,9 +6,9 @@ import java.util.List;
 
 public class RoutesProfileDto {
     private Long id;
-    private Long userId;
     private String profileName;
     private int targetTime;
+    private LatLng origin;
     private List<LatLng> startCloseWaypoints;
     private List<LatLng> endCloseWaypoints;
     private String createdAt;
@@ -20,14 +20,6 @@ public class RoutesProfileDto {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
     }
 
     public String getProfileName() {
@@ -76,5 +68,13 @@ public class RoutesProfileDto {
 
     public void setUpdatedAt(String updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public LatLng getOrigin() {
+        return origin;
+    }
+
+    public void setOrigin(LatLng origin) {
+        this.origin = origin;
     }
 }
