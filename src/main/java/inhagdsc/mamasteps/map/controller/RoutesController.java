@@ -59,9 +59,9 @@ public class RoutesController {
         }
     }
 
-    @PostMapping("/computeRoutes")
-    public ApiResponse<ObjectNode> getRoutes(@RequestBody RouteRequestDto routeRequestDto) throws IOException, JsonProcessingException {
-        ObjectNode response = routesService.computeRoutes(routeRequestDto);
+    @PostMapping("/computeRoutes/{profileId}")
+    public ApiResponse<ObjectNode> getRoutes(@RequestBody RouteRequestDto routeRequestDto, @PathVariable Long profileId) throws IOException {
+        ObjectNode response = routesService.computeRoutes(profileId, routeRequestDto);
         return ApiResponse.onSuccess(OK, response);
     }
 }

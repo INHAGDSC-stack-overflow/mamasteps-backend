@@ -6,11 +6,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import inhagdsc.mamasteps.map.domain.LatLng;
+import inhagdsc.mamasteps.map.domain.UsedCreatedWaypointEntity;
 import inhagdsc.mamasteps.map.dto.RouteRequestDto;
 import inhagdsc.mamasteps.map.domain.RouteRequestEntity;
 import inhagdsc.mamasteps.map.domain.RoutesProfileEntity;
 import inhagdsc.mamasteps.map.dto.RoutesProfileDto;
 import inhagdsc.mamasteps.map.repository.RoutesProfileRepository;
+import inhagdsc.mamasteps.map.repository.UsedCreatedWaypointRepository;
 import inhagdsc.mamasteps.map.service.tool.PolylineEncoder;
 import inhagdsc.mamasteps.map.service.tool.waypoint.WaypointGenerator;
 import inhagdsc.mamasteps.user.repository.UserRepository;
@@ -18,7 +20,6 @@ import jakarta.persistence.EntityNotFoundException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -41,17 +42,22 @@ public class RoutesServiceImpl implements RoutesService {
     @Value("${TMAP_API_KEY}")
     private String tmapApiKey;
 
+    @Value("${WAYPOINT_GENERATOR_NUMBER_OF_RESULTS}")
+    private int NUMBER_OF_RESULTS;
+
     private final WebClient googleWebClient;
     private final WebClient tmapWebClient;
     private final WaypointGenerator waypointGenerator;
+    private final UsedCreatedWaypointRepository usedCreatedWaypointRepository;
     private final RoutesProfileRepository routesProfileRepository;
     private final UserRepository userRepository;
 
     @Autowired
-    public RoutesServiceImpl(WebClient.Builder webClientBuilder, WaypointGenerator waypointGenerator, RoutesProfileRepository routesProfileRepository, UserRepository userRepository) {
+    public RoutesServiceImpl(WebClient.Builder webClientBuilder, WaypointGenerator waypointGenerator, UsedCreatedWaypointRepository usedCreatedWaypointRepository, RoutesProfileRepository routesProfileRepository, UserRepository userRepository) {
         this.googleWebClient = webClientBuilder.baseUrl("https://routes.googleapis.com").build();
         this.tmapWebClient = webClientBuilder.baseUrl("https://apis.openapi.sk.com").build();
         this.waypointGenerator = waypointGenerator;
+        this.usedCreatedWaypointRepository = usedCreatedWaypointRepository;
         this.routesProfileRepository = routesProfileRepository;
         this.userRepository = userRepository;
     }
@@ -89,7 +95,7 @@ public class RoutesServiceImpl implements RoutesService {
     @Override
     public void editProfile(Long userId, Long profileId, RoutesProfileDto routesProfileDto) {
         RoutesProfileEntity profile = routesProfileRepository.findAllByUserId(userId).stream()
-                .filter(routesProfileEntity -> routesProfileEntity.getId().equals(profileId))
+                .filter(routesProfileEntity -> routesProfileEntity.getRoutesProfileId().equals(profileId))
                 .findFirst()
                 .orElseThrow(() -> new EntityNotFoundException("Profile with ID " + profileId + " not found for User ID " + userId));
         profile.setProfileName(routesProfileDto.getProfileName());
@@ -104,28 +110,17 @@ public class RoutesServiceImpl implements RoutesService {
     @Override
     public void deleteProfile(Long userId, Long profileId) {
         RoutesProfileEntity profile = routesProfileRepository.findAllByUserId(userId).stream()
-                .filter(routesProfileEntity -> routesProfileEntity.getId().equals(profileId))
+                .filter(routesProfileEntity -> routesProfileEntity.getRoutesProfileId().equals(profileId))
                 .findFirst()
                 .orElseThrow(() -> new EntityNotFoundException("Profile with ID " + profileId + " not found for User ID " + userId));
         routesProfileRepository.delete(profile);
     }
 
     @Override
-    public ObjectNode computeRoutes(RouteRequestDto routeRequestDto) throws IOException {
+    public ObjectNode computeRoutes(Long profileId, RouteRequestDto routeRequestDto) throws IOException {
         RouteRequestEntity originRouteRequestEntity = routeRequestDto.toEntity();
         waypointGenerator.setRouteRequestEntity(originRouteRequestEntity);
 
-        double originLatitude = originRouteRequestEntity.getOrigin().getLatitude();
-        double originLongitude = originRouteRequestEntity.getOrigin().getLongitude();
-        if ((originLatitude > 33 && originLatitude < 39) && (originLongitude > 124 && originLongitude < 132)) {
-            return computeRoutesUsingTmap(originRouteRequestEntity);
-        } else {
-            return computeRoutesUsingGoogle(originRouteRequestEntity);
-        }
-
-    }
-
-    private ObjectNode computeRoutesUsingGoogle(RouteRequestEntity originRouteRequestEntity) throws IOException {
         boolean timeOverflow = false;
         List<LatLng> createdWaypoints = waypointGenerator.getSurroundingWaypoints();
         if (createdWaypoints.isEmpty()) {
@@ -133,8 +128,31 @@ public class RoutesServiceImpl implements RoutesService {
             createdWaypoints.add(originRouteRequestEntity.getOrigin());
         }
 
+        List<LatLng> selectedWaypoints = selectWaypoints(profileId, createdWaypoints, NUMBER_OF_RESULTS);
+        if (selectedWaypoints.isEmpty()) {
+            throw new RuntimeException("No waypoints available");
+        }
+
+        double originLatitude = originRouteRequestEntity.getOrigin().getLatitude();
+        double originLongitude = originRouteRequestEntity.getOrigin().getLongitude();
+        ArrayNode routesArray = new ObjectMapper().createArrayNode();
+        if ((originLatitude > 33 && originLatitude < 39) && (originLongitude > 124 && originLongitude < 132)) {
+            routesArray = computeRoutesUsingTmap(originRouteRequestEntity, selectedWaypoints, timeOverflow);
+        } else {
+            routesArray = computeRoutesUsingGoogle(originRouteRequestEntity, selectedWaypoints, timeOverflow);
+        }
+
+        ArrayNode sortedRoutesArray = sortRoutesArrayByTime(routesArray);
+        deduplicateRoutes(sortedRoutesArray);
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode result = mapper.createObjectNode();
+        result.put("timeOverflow", timeOverflow);
+        result.put("polylines", sortedRoutesArray);
+        return result;
+    }
+
+    private ArrayNode computeRoutesUsingGoogle(RouteRequestEntity originRouteRequestEntity, List<LatLng> createdWaypoints, boolean timeOverflow) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
         ArrayNode routesArray = mapper.createArrayNode();
         for (LatLng waypoint : createdWaypoints) {
             RouteRequestEntity routeRequestEntity = new RouteRequestEntity();
@@ -161,23 +179,11 @@ public class RoutesServiceImpl implements RoutesService {
             }
         }
 
-        ArrayNode sortedRoutesArray = sortRoutesArrayByTime(routesArray);
-        deduplicateRoutes(sortedRoutesArray);
-        result.put("timeOverflow", timeOverflow);
-        result.put("polylines", sortedRoutesArray);
-        return result;
+        return routesArray;
     }
 
-    private ObjectNode computeRoutesUsingTmap(RouteRequestEntity originRouteRequestEntity) throws IOException {
-        boolean timeOverflow = false;
-        List<LatLng> createdWaypoints = waypointGenerator.getSurroundingWaypoints();
-        if (createdWaypoints.isEmpty()) {
-            timeOverflow = true;
-            createdWaypoints.add(originRouteRequestEntity.getOrigin());
-        }
-
+    private ArrayNode computeRoutesUsingTmap(RouteRequestEntity originRouteRequestEntity, List<LatLng> createdWaypoints, boolean timeOverflow) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
-        ObjectNode result = mapper.createObjectNode();
         ArrayNode routesArray = mapper.createArrayNode();
         for (LatLng waypoint : createdWaypoints) {
             RouteRequestEntity routeRequestEntity = new RouteRequestEntity();
@@ -198,11 +204,40 @@ public class RoutesServiceImpl implements RoutesService {
             }
         }
 
-        ArrayNode sortedRoutesArray = sortRoutesArrayByTime(routesArray);
-        deduplicateRoutes(sortedRoutesArray);
-        result.put("timeOverflow", timeOverflow);
-        result.put("polylines", sortedRoutesArray);
-        return result;
+        return routesArray;
+    }
+
+    private List<LatLng> selectWaypoints(Long profileId, List<LatLng> waypoints, int number) {
+        List<UsedCreatedWaypointEntity> usedCreatedWaypointEntities = usedCreatedWaypointRepository.findAllByRoutesProfile(profileId);
+        List<LatLng> usedWaypoints = new ArrayList<>();
+        for (UsedCreatedWaypointEntity entity : usedCreatedWaypointEntities) {
+            usedWaypoints.add(entity.getLatlng());
+        }
+
+        for (LatLng usedWaypoint : usedWaypoints) {
+            waypoints.remove(usedWaypoint);
+        }
+
+        List<LatLng> selectedWaypoints = new ArrayList<>();
+        if (waypoints.size() <= number) {
+            selectedWaypoints = waypoints;
+        }
+        else {
+            for (int i = 0; i < waypoints.size(); i++) {
+                if (i % (waypoints.size() / number) == 0) {
+                    selectedWaypoints.add(waypoints.get(i));
+                }
+            }
+        }
+
+        for (LatLng selectedWaypoint : selectedWaypoints) {
+            UsedCreatedWaypointEntity usedCreatedWaypointEntity = new UsedCreatedWaypointEntity();
+            usedCreatedWaypointEntity.setRoutesProfile(routesProfileRepository.findById(profileId).get());
+            usedCreatedWaypointEntity.setLatlng(selectedWaypoint);
+            usedCreatedWaypointRepository.save(usedCreatedWaypointEntity);
+        }
+
+        return selectedWaypoints;
     }
 
     private String buildGoogleRequestBody(RouteRequestEntity routeRequestEntity) {

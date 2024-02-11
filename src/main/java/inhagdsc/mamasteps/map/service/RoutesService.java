@@ -13,6 +13,6 @@ public interface RoutesService {
     public List<RoutesProfileDto> getProfiles(Long userId);
     public void editProfile(Long userId, Long profileId, RoutesProfileDto routesProfileDto);
     public void deleteProfile(Long userId, Long profileId);
-    public ObjectNode computeRoutes(RouteRequestDto routeRequestDto) throws IOException;
+    public ObjectNode computeRoutes(Long profileId, RouteRequestDto routeRequestDto) throws IOException;
 }
 
