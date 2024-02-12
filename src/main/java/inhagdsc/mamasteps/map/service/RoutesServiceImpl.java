@@ -20,6 +20,7 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -107,11 +108,13 @@ public class RoutesServiceImpl implements RoutesService {
     }
 
     @Override
+    @Transactional
     public void deleteProfile(Long userId, Long profileId) {
         RoutesProfileEntity profile = routesProfileRepository.findAllByUserId(userId).stream()
                 .filter(routesProfileEntity -> routesProfileEntity.getId().equals(profileId))
                 .findFirst()
                 .orElseThrow(() -> new EntityNotFoundException("Profile with ID " + profileId + " not found for User ID " + userId));
+        routeRepository.deleteAllByRoutesProfile_Id(profileId);
         routesProfileRepository.delete(profile);
     }
 
