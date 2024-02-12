@@ -13,6 +13,7 @@ import inhagdsc.mamasteps.map.repository.RouteRepository;
 import inhagdsc.mamasteps.map.repository.RoutesProfileRepository;
 import inhagdsc.mamasteps.map.service.tool.PolylineEncoder;
 import inhagdsc.mamasteps.map.service.tool.waypoint.WaypointGenerator;
+import inhagdsc.mamasteps.user.entity.User;
 import inhagdsc.mamasteps.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.json.JSONObject;
@@ -115,7 +116,9 @@ public class RoutesServiceImpl implements RoutesService {
     }
 
     @Override
-    public List<RouteDto> computeRoutes(Long profileId, RouteRequestDto routeRequestDto) throws IOException {
+    public List<RouteDto> computeRoutes(Long userId, Long profileId, RouteRequestDto routeRequestDto) throws IOException {
+        validateProfileOwnership(userId, profileId);
+
         RouteRequestEntity originRouteRequestEntity = routeRequestDto.toEntity();
         waypointGenerator.setRouteRequestEntity(originRouteRequestEntity);
 
@@ -390,7 +393,6 @@ public class RoutesServiceImpl implements RoutesService {
         return list;
     }
 
-
     private void deduplicateRoutes(ArrayNode routesArray) {
         for (int i = 0; i < routesArray.size() - 1; i++) {
             JsonNode current = routesArray.get(i);
@@ -400,5 +402,13 @@ public class RoutesServiceImpl implements RoutesService {
                 i--;
             }
         }
+    }
+
+    private void validateProfileOwnership(Long userId, Long profileId) {
+        routesProfileRepository.findById(profileId)
+                .map(RoutesProfileEntity::getUser)
+                .map(User::getId)
+                .filter(id -> id.equals(userId))
+                .orElseThrow(() -> new RuntimeException("Profile ID " + profileId + " does not belong to User ID " + userId));
     }
 }

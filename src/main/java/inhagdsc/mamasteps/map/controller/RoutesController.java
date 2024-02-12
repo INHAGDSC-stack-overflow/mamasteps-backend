@@ -61,8 +61,12 @@ public class RoutesController {
     }
 
     @PostMapping("/computeRoutes/{profileId}")
-    public ApiResponse<List<RouteDto>> getRoutes(@RequestBody RouteRequestDto routeRequestDto, @PathVariable Long profileId) throws IOException {
-        List<RouteDto> response = routesService.computeRoutes(profileId, routeRequestDto);
-        return ApiResponse.onSuccess(OK, response);
+    public ApiResponse<List<RouteDto>> getRoutes(@RequestBody RouteRequestDto routeRequestDto, @PathVariable Long profileId, @AuthenticationPrincipal User user) throws IOException {
+        try {
+            List<RouteDto> response = routesService.computeRoutes(user.getId(), profileId, routeRequestDto);
+            return ApiResponse.onSuccess(OK, response);
+        } catch (Exception e) {
+            return ApiResponse.onFailure(FORBIDDEN.getCode(), e.getMessage(), null);
+        }
     }
 }
