@@ -1,5 +1,6 @@
 package inhagdsc.mamasteps.map.domain;
 
+import inhagdsc.mamasteps.map.dto.RouteRequestDto;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.util.LinkedMultiValueMap;
@@ -12,7 +13,8 @@ import java.util.stream.Collectors;
 public class RouteRequestEntity {
     int targetTime;
     LatLng origin;
-    List<LatLng> intermediates;
+    List<LatLng> startCloseIntermediates;
+    List<LatLng> endCloseIntermediates;
 
     public JSONObject toGoogleJson() {
         JSONObject json = new JSONObject();
@@ -21,7 +23,10 @@ public class RouteRequestEntity {
         json.put("destination", createLocationJson(this.origin));
 
         JSONArray intermediatesJson = new JSONArray();
-        for (LatLng latLng : this.intermediates) {
+        for (LatLng latLng : this.startCloseIntermediates) {
+            intermediatesJson.put(createLocationJson(latLng));
+        }
+        for (LatLng latLng : this.endCloseIntermediates) {
             intermediatesJson.put(createLocationJson(latLng));
         }
         json.put("intermediates", intermediatesJson);
@@ -37,7 +42,10 @@ public class RouteRequestEntity {
         valueMap.add("endY", Double.toString(this.origin.getLatitude()));
 
         List<String> passList = new ArrayList<>();
-        for (LatLng latLng : this.intermediates) {
+        for (LatLng latLng : this.startCloseIntermediates) {
+            passList.add(Double.toString(latLng.getLongitude()) + "," + Double.toString(latLng.getLatitude()));
+        }
+        for (LatLng latLng : this.endCloseIntermediates) {
             passList.add(Double.toString(latLng.getLongitude()) + "," + Double.toString(latLng.getLatitude()));
         }
         valueMap.add("passList", passList.stream().collect(Collectors.joining("_")));
@@ -58,7 +66,8 @@ public class RouteRequestEntity {
         RouteRequestDto routeRequestDto = new RouteRequestDto();
         routeRequestDto.setTargetTime(this.targetTime);
         routeRequestDto.setOrigin(this.origin);
-        routeRequestDto.setIntermediates(this.intermediates);
+        routeRequestDto.setStartCloseIntermediates(this.startCloseIntermediates);
+        routeRequestDto.setEndCloseIntermediates(this.endCloseIntermediates);
         return routeRequestDto;
     }
 
@@ -78,11 +87,19 @@ public class RouteRequestEntity {
         this.origin = origin;
     }
 
-    public List<LatLng> getIntermediates() {
-        return intermediates;
+    public List<LatLng> getStartCloseIntermediates() {
+        return startCloseIntermediates;
     }
 
-    public void setIntermediates(List<LatLng> intermediates) {
-        this.intermediates = intermediates;
+    public void setStartCloseIntermediates(List<LatLng> startCloseIntermediates) {
+        this.startCloseIntermediates = startCloseIntermediates;
+    }
+
+    public List<LatLng> getEndCloseIntermediates() {
+        return endCloseIntermediates;
+    }
+
+    public void setEndCloseIntermediates(List<LatLng> endCloseIntermediates) {
+        this.endCloseIntermediates = endCloseIntermediates;
     }
 }

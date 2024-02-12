@@ -14,30 +14,46 @@ import java.util.List;
 public class ExploratoryWaypointGenerator implements WaypointGenerator {
     @Value("${WAYPOINT_GENERATOR_AREA_DIVISION}")
     private int DIVISION;
-    @Value("${WAYPOINT_GENERATOR_NUMBER_OF_RESULTS}")
-    private int NUMBER_OF_RESULTS;
     @Value("${DISTANCE_FACTOR}")
     private double DISTANCE_FACTOR;
     private int targetTime;
     private LatLng origin;
-    private List<LatLng> intermediates;
+    private List<LatLng> startCloseIntermediates;
+    private List<LatLng> endCloseIntermediates;
 
     public void setRouteRequestEntity(RouteRequestEntity routeRequestEntity) {
         this.targetTime = routeRequestEntity.getTargetTime();
         this.origin = routeRequestEntity.getOrigin();
-        this.intermediates = routeRequestEntity.getIntermediates();
+        this.startCloseIntermediates = routeRequestEntity.getStartCloseIntermediates();
+        this.endCloseIntermediates = routeRequestEntity.getEndCloseIntermediates();
     }
 
     public List<LatLng> getSurroundingWaypoints() {
-        LatLng lastWaypoint = intermediates.get(intermediates.size() - 1);
-        double smallerLat = Math.min(origin.getLatitude(), lastWaypoint.getLatitude());
-        double smallerLng = Math.min(origin.getLongitude(), lastWaypoint.getLongitude());
-        double largerLat = Math.max(origin.getLatitude(), lastWaypoint.getLatitude());
-        double largerLng = Math.max(origin.getLongitude(), lastWaypoint.getLongitude());
+
+        LatLng nextOfTarget;
+        if (endCloseIntermediates.isEmpty()) {
+            nextOfTarget = origin;
+        }
+        else {
+            nextOfTarget = endCloseIntermediates.get(0);
+        }
+
+        LatLng previousOfTarget;
+        if (startCloseIntermediates.isEmpty()) {
+            previousOfTarget = origin;
+        }
+        else {
+            previousOfTarget = startCloseIntermediates.get(startCloseIntermediates.size() - 1);
+        }
+
+        double smallerLat = Math.min(previousOfTarget.getLatitude(), nextOfTarget.getLatitude());
+        double smallerLng = Math.min(previousOfTarget.getLongitude(), nextOfTarget.getLongitude());
+        double largerLat = Math.max(previousOfTarget.getLatitude(), nextOfTarget.getLatitude());
+        double largerLng = Math.max(previousOfTarget.getLongitude(), nextOfTarget.getLongitude());
 
         double requiredDistance = getRequiredDistance();
         double requiredDistanceInLatitude = requiredDistance / 111;
-        double requiredDistanceInLongitude = (requiredDistance / 111) / Math.cos(Math.toRadians(origin.getLatitude()));
+        double requiredDistanceInLongitude = (requiredDistance / 111) / Math.cos(Math.toRadians(previousOfTarget.getLatitude()));
 
         double rightEdge = smallerLng + requiredDistanceInLongitude;
         double leftEdge = largerLng - requiredDistanceInLongitude;
@@ -60,7 +76,7 @@ public class ExploratoryWaypointGenerator implements WaypointGenerator {
         List<LatLng> surroundingWaypoints = new ArrayList<>();
         for (int i = 0; i <= DIVISION; i++) {
             for (int j = 0; j <= DIVISION; j++) {
-                double distance = getDistanceBetweenThree(origin, square[i][j], lastWaypoint);
+                double distance = getDistanceBetweenThree(previousOfTarget, square[i][j], nextOfTarget);
                 double longitude = square[i][j].getLongitude();
                 double latitude = square[i][j].getLatitude();
                 double tolerance = 2 * getDistance(longitude, latitude, longitude + horizDivUnit / 2, latitude + vertDivUnit / 2);
@@ -70,14 +86,7 @@ public class ExploratoryWaypointGenerator implements WaypointGenerator {
             }
         }
 
-        List<LatLng> selectedWaypoints = new ArrayList<>();
-        for (int i = 0; i < surroundingWaypoints.size(); i++) {
-            if (i % (surroundingWaypoints.size() / NUMBER_OF_RESULTS) == 0) {
-                selectedWaypoints.add(surroundingWaypoints.get(i));
-            }
-        }
-
-        return selectedWaypoints;
+        return surroundingWaypoints;
     }
 
     private double getDistanceBetweenThree(LatLng first, LatLng middle, LatLng last) {
@@ -96,8 +105,17 @@ public class ExploratoryWaypointGenerator implements WaypointGenerator {
     }
 
     private double getRequiredDistance() {
-        List<LatLng> waypoints = LatLng.deepCopyList(intermediates);
-        waypoints.add(0, origin);
+        List<LatLng> endCloseWaypoints = LatLng.deepCopyList(endCloseIntermediates);
+        List<LatLng> startCloseWaypoints = LatLng.deepCopyList(startCloseIntermediates);
+        endCloseWaypoints.add(origin);
+        startCloseWaypoints.add(0, origin);
+
+        double sumOfTerms = getDistanceBetweenLots(startCloseWaypoints) + getDistanceBetweenLots(endCloseWaypoints);
+
+        return ((3.5 * targetTime / 60) - sumOfTerms) * DISTANCE_FACTOR;
+    }
+
+    private double getDistanceBetweenLots(List<LatLng> waypoints) {
         double sumOfTerms = 0;
         for (int i = 0; i < waypoints.size() - 1; i++) {
             LatLng waypoint1 = waypoints.get(i);
@@ -108,8 +126,7 @@ public class ExploratoryWaypointGenerator implements WaypointGenerator {
             double y2 = waypoint2.getLatitude();
             sumOfTerms += getDistance(x1, y1, x2, y2);
         }
-
-        return ((3.5 * targetTime / 60) - sumOfTerms) * DISTANCE_FACTOR;
+        return sumOfTerms;
     }
 
     private double getDistance(double x1, double y1, double x2, double y2) {
