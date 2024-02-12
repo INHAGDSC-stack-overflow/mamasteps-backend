@@ -3,6 +3,7 @@ package inhagdsc.mamasteps.map.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import inhagdsc.mamasteps.common.ApiResponse;
+import inhagdsc.mamasteps.map.dto.RouteDto;
 import inhagdsc.mamasteps.map.dto.RouteRequestDto;
 import inhagdsc.mamasteps.map.dto.RoutesProfileDto;
 import inhagdsc.mamasteps.map.service.RoutesService;
@@ -60,8 +61,8 @@ public class RoutesController {
     }
 
     @PostMapping("/computeRoutes/{profileId}")
-    public ApiResponse<ObjectNode> getRoutes(@RequestBody RouteRequestDto routeRequestDto, @PathVariable Long profileId) throws IOException {
-        ObjectNode response = routesService.computeRoutes(profileId, routeRequestDto);
+    public ApiResponse<List<RouteDto>> getRoutes(@RequestBody RouteRequestDto routeRequestDto, @PathVariable Long profileId) throws IOException {
+        List<RouteDto> response = routesService.computeRoutes(profileId, routeRequestDto);
         return ApiResponse.onSuccess(OK, response);
     }
 }
