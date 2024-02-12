@@ -14,8 +14,6 @@ import java.util.List;
 public class ExploratoryWaypointGenerator implements WaypointGenerator {
     @Value("${WAYPOINT_GENERATOR_AREA_DIVISION}")
     private int DIVISION;
-    @Value("${WAYPOINT_GENERATOR_NUMBER_OF_RESULTS}")
-    private int NUMBER_OF_RESULTS;
     @Value("${DISTANCE_FACTOR}")
     private double DISTANCE_FACTOR;
     private int targetTime;
@@ -88,14 +86,7 @@ public class ExploratoryWaypointGenerator implements WaypointGenerator {
             }
         }
 
-        List<LatLng> selectedWaypoints = new ArrayList<>();
-        for (int i = 0; i < surroundingWaypoints.size(); i++) {
-            if (i % (surroundingWaypoints.size() / NUMBER_OF_RESULTS) == 0) {
-                selectedWaypoints.add(surroundingWaypoints.get(i));
-            }
-        }
-
-        return selectedWaypoints;
+        return surroundingWaypoints;
     }
 
     private double getDistanceBetweenThree(LatLng first, LatLng middle, LatLng last) {
