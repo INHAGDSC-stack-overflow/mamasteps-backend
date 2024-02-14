@@ -1,6 +1,8 @@
 package inhagdsc.mamasteps.user.entity;
 
 import inhagdsc.mamasteps.common.BaseTimeEntity;
+import inhagdsc.mamasteps.map.domain.LatLng;
+import inhagdsc.mamasteps.map.domain.converter.LatLngConverter;
 import inhagdsc.mamasteps.user.entity.enums.ActivityLevel;
 import inhagdsc.mamasteps.user.entity.enums.Role;
 import jakarta.persistence.*;
@@ -41,6 +43,11 @@ public class User extends BaseTimeEntity implements UserDetails {
     private String profileImageUrl; // 프로필 이미지
     @Enumerated(EnumType.STRING)
     private ActivityLevel activityLevel; // 활동량
+    private double walkSpeed; // 걷기 속도
+    private int targetTime; // 목표 시간
+    private int walkCount; // 산책 횟수
+    @Convert(converter = LatLngConverter.class)
+    private LatLng origin; // 출발지
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<WalkPreference> walkPreferences = new ArrayList<>();
@@ -52,7 +59,6 @@ public class User extends BaseTimeEntity implements UserDetails {
         public Collection<? extends GrantedAuthority> getAuthorities() {
             return role.getAuthorities();
         }
-
 
         @Override
         public String getUsername() {
@@ -105,6 +111,22 @@ public class User extends BaseTimeEntity implements UserDetails {
 
     public void updateProfileImageUrl(String profileImageUrl) {
         this.profileImageUrl = profileImageUrl;
+    }
+
+    public void setWalkCount(int walkCount) {
+        this.walkCount = walkCount;
+    }
+
+    public void setWalkSpeed(double walkSpeed) {
+        this.walkSpeed = walkSpeed;
+    }
+
+    public void setTargetTime(int targetTime) {
+        this.targetTime = targetTime;
+    }
+
+    public void setOrigin(LatLng origin) {
+        this.origin = origin;
     }
 }
 
