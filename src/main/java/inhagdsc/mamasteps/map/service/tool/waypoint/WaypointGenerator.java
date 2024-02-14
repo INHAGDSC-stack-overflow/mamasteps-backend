@@ -1,11 +1,10 @@
 package inhagdsc.mamasteps.map.service.tool.waypoint;
 
 import inhagdsc.mamasteps.map.domain.LatLng;
-import inhagdsc.mamasteps.map.domain.RouteRequestEntity;
+import inhagdsc.mamasteps.map.domain.RouteRequestProfileEntity;
 
 import java.util.List;
 
 public interface WaypointGenerator {
-    public List<LatLng> getSurroundingWaypoints();
-    public void setRouteRequestEntity(RouteRequestEntity routeRequestEntity);
+    public List<LatLng> getSurroundingWaypoints(RouteRequestProfileEntity requestProfileEntity);
 }
