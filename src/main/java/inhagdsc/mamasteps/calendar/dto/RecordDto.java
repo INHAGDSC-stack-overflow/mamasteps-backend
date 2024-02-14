@@ -3,22 +3,25 @@ package inhagdsc.mamasteps.calendar.dto;
 import inhagdsc.mamasteps.calendar.domain.RecordEntity;
 import inhagdsc.mamasteps.calendar.domain.ScheduleEntity;
 import inhagdsc.mamasteps.map.domain.RouteEntity;
+import jakarta.persistence.Column;
 
 public class RecordDto {
     private Long id;
-    private RouteEntity route;
+    private Long routeId;
     private String date;
+    private int completedTimeSeconds;
     private String createdAt;
     private String updatedAt;
 
     public RecordEntity toEntity() {
-        RecordEntity scheduleEntity = new RecordEntity();
-        scheduleEntity.setId(id);
-        scheduleEntity.setRoute(route);
-        scheduleEntity.setDate(date);
-        scheduleEntity.setCreatedAt(createdAt);
-        scheduleEntity.setUpdatedAt(updatedAt);
-        return scheduleEntity;
+        RecordEntity recordEntity = new RecordEntity();
+        recordEntity.setId(id);
+        recordEntity.setRouteId(routeId);
+        recordEntity.setDate(date);
+        recordEntity.setCompletedTimeSeconds(completedTimeSeconds);
+        recordEntity.setCreatedAt(createdAt);
+        recordEntity.setUpdatedAt(updatedAt);
+        return recordEntity;
     }
 
     public Long getId() {
@@ -27,14 +30,6 @@ public class RecordDto {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public RouteEntity getRoute() {
-        return route;
-    }
-
-    public void setRoute(RouteEntity route) {
-        this.route = route;
     }
 
     public String getDate() {
@@ -59,6 +54,22 @@ public class RecordDto {
 
     public void setUpdatedAt(String updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public Long getRouteId() {
+        return routeId;
+    }
+
+    public void setRouteId(Long routeId) {
+        this.routeId = routeId;
+    }
+
+    public int getCompletedTimeSeconds() {
+        return completedTimeSeconds;
+    }
+
+    public void setCompletedTimeSeconds(int completedTimeSeconds) {
+        this.completedTimeSeconds = completedTimeSeconds;
     }
 }
 

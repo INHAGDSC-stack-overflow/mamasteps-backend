@@ -16,9 +16,8 @@ public class ScheduleEntity {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @OneToOne
-    @JoinColumn(name = "route_id", nullable = true)
-    private RouteEntity route;
+    @Column(name = "route_id", nullable = true)
+    private Long routeId;
 
     @Column(name = "date", columnDefinition = "timestamp")
     private String date;
@@ -35,15 +34,16 @@ public class ScheduleEntity {
     public ScheduleDto toDto() {
         ScheduleDto dto = new ScheduleDto();
         dto.setId(this.getId());
-        dto.setRoute(this.getRoute());
+        dto.setRouteId(this.getRouteId());
         dto.setDate(this.getDate());
+        dto.setTargetTimeSeconds(this.getTargetTimeSeconds());
         dto.setCreatedAt(this.getCreatedAt());
         dto.setUpdatedAt(this.getUpdatedAt());
         return dto;
     }
 
     public void update(ScheduleEntity scheduleEntity) {
-        this.route = scheduleEntity.getRoute();
+        this.routeId = scheduleEntity.getRouteId();
         this.date = scheduleEntity.getDate();
         this.updatedAt = scheduleEntity.getUpdatedAt();
     }
@@ -54,14 +54,6 @@ public class ScheduleEntity {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public RouteEntity getRoute() {
-        return route;
-    }
-
-    public void setRoute(RouteEntity route) {
-        this.route = route;
     }
 
     public String getDate() {
@@ -94,5 +86,21 @@ public class ScheduleEntity {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public Long getRouteId() {
+        return routeId;
+    }
+
+    public void setRouteId(Long routeId) {
+        this.routeId = routeId;
+    }
+
+    public int getTargetTimeSeconds() {
+        return targetTimeSeconds;
+    }
+
+    public void setTargetTimeSeconds(int targetTimeSeconds) {
+        this.targetTimeSeconds = targetTimeSeconds;
     }
 }
