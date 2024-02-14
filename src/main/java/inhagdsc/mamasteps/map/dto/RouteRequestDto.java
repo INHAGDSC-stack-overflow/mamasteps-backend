@@ -1,7 +1,7 @@
 package inhagdsc.mamasteps.map.dto;
 
 import inhagdsc.mamasteps.map.domain.LatLng;
-import inhagdsc.mamasteps.map.domain.RouteRequestEntity;
+import inhagdsc.mamasteps.map.domain.RouteRequestProfileEntity;
 
 import java.util.List;
 
@@ -11,12 +11,12 @@ public class RouteRequestDto {
     List<LatLng> startCloseIntermediates;
     List<LatLng> endCloseIntermediates;
 
-    public RouteRequestEntity toEntity() {
-        RouteRequestEntity routeRequestEntity = new RouteRequestEntity();
+    public RouteRequestProfileEntity toEntity() {
+        RouteRequestProfileEntity routeRequestEntity = new RouteRequestProfileEntity();
         routeRequestEntity.setTargetTime(this.targetTime);
         routeRequestEntity.setOrigin(this.origin);
-        routeRequestEntity.setStartCloseIntermediates(this.startCloseIntermediates);
-        routeRequestEntity.setEndCloseIntermediates(this.endCloseIntermediates);
+        routeRequestEntity.setStartCloseWaypoints(this.startCloseIntermediates);
+        routeRequestEntity.setEndCloseWaypoints(this.endCloseIntermediates);
         return routeRequestEntity;
     }
 

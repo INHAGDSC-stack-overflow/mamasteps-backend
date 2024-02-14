@@ -1,14 +1,18 @@
 package inhagdsc.mamasteps.map.dto;
 
 import inhagdsc.mamasteps.map.domain.LatLng;
+import jakarta.persistence.Column;
 
 public class RouteDto {
     private Long routeId;
-    private Long routesProfileId;
     private LatLng createdWaypoint;
+    private String routeName;
     private String polyLine;
     private Double totalDistanceMeters;
     private Integer totalTimeSeconds;
+    private Double walkSpeed;
+    private String usedAt;
+    private int evaluatedHardness;
     private String createdAt;
     private String updatedAt;
 
@@ -18,6 +22,14 @@ public class RouteDto {
 
     public void setRouteId(Long routeId) {
         this.routeId = routeId;
+    }
+
+    public LatLng getCreatedWaypoint() {
+        return createdWaypoint;
+    }
+
+    public void setCreatedWaypoint(LatLng createdWaypoint) {
+        this.createdWaypoint = createdWaypoint;
     }
 
     public String getPolyLine() {
@@ -44,6 +56,30 @@ public class RouteDto {
         this.totalTimeSeconds = totalTimeSeconds;
     }
 
+    public Double getWalkSpeed() {
+        return walkSpeed;
+    }
+
+    public void setWalkSpeed(Double walkSpeed) {
+        this.walkSpeed = walkSpeed;
+    }
+
+    public String getUsedAt() {
+        return usedAt;
+    }
+
+    public void setUsedAt(String usedAt) {
+        this.usedAt = usedAt;
+    }
+
+    public int getEvaluatedHardness() {
+        return evaluatedHardness;
+    }
+
+    public void setEvaluatedHardness(int evaluatedHardness) {
+        this.evaluatedHardness = evaluatedHardness;
+    }
+
     public String getCreatedAt() {
         return createdAt;
     }
@@ -60,19 +96,11 @@ public class RouteDto {
         this.updatedAt = updatedAt;
     }
 
-    public LatLng getCreatedWaypoint() {
-        return createdWaypoint;
+    public String getRouteName() {
+        return routeName;
     }
 
-    public void setCreatedWaypoint(LatLng createdWaypoint) {
-        this.createdWaypoint = createdWaypoint;
-    }
-
-    public Long getRoutesProfileId() {
-        return routesProfileId;
-    }
-
-    public void setRoutesProfileId(Long routesProfileId) {
-        this.routesProfileId = routesProfileId;
+    public void setRouteName(String routeName) {
+        this.routeName = routeName;
     }
 }

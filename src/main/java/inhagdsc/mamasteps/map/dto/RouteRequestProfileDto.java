@@ -4,13 +4,14 @@ import inhagdsc.mamasteps.map.domain.LatLng;
 
 import java.util.List;
 
-public class RoutesProfileDto {
+public class RouteRequestProfileDto {
     private Long id;
-    private String profileName;
     private int targetTime;
+    private double walkSpeed;
     private LatLng origin;
     private List<LatLng> startCloseWaypoints;
     private List<LatLng> endCloseWaypoints;
+    private List<LatLng> createdWaypointCandidate;
     private String createdAt;
     private String updatedAt;
 
@@ -22,20 +23,28 @@ public class RoutesProfileDto {
         this.id = id;
     }
 
-    public String getProfileName() {
-        return profileName;
-    }
-
-    public void setProfileName(String profileName) {
-        this.profileName = profileName;
-    }
-
     public int getTargetTime() {
         return targetTime;
     }
 
     public void setTargetTime(int targetTime) {
         this.targetTime = targetTime;
+    }
+
+    public double getWalkSpeed() {
+        return walkSpeed;
+    }
+
+    public void setWalkSpeed(double walkSpeed) {
+        this.walkSpeed = walkSpeed;
+    }
+
+    public LatLng getOrigin() {
+        return origin;
+    }
+
+    public void setOrigin(LatLng origin) {
+        this.origin = origin;
     }
 
     public List<LatLng> getStartCloseWaypoints() {
@@ -54,6 +63,14 @@ public class RoutesProfileDto {
         this.endCloseWaypoints = endCloseWaypoints;
     }
 
+    public List<LatLng> getCreatedWaypointCandidate() {
+        return createdWaypointCandidate;
+    }
+
+    public void setCreatedWaypointCandidate(List<LatLng> createdWaypointCandidate) {
+        this.createdWaypointCandidate = createdWaypointCandidate;
+    }
+
     public String getCreatedAt() {
         return createdAt;
     }
@@ -68,13 +85,5 @@ public class RoutesProfileDto {
 
     public void setUpdatedAt(String updatedAt) {
         this.updatedAt = updatedAt;
-    }
-
-    public LatLng getOrigin() {
-        return origin;
-    }
-
-    public void setOrigin(LatLng origin) {
-        this.origin = origin;
     }
 }
