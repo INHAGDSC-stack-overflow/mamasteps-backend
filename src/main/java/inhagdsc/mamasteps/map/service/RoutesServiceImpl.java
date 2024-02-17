@@ -73,7 +73,8 @@ public class RoutesServiceImpl implements RoutesService {
             existingProfile.setTargetTime(user.getTargetTime());
             existingProfile.setStartCloseWaypoints(new ArrayList<>());
             existingProfile.setEndCloseWaypoints(new ArrayList<>());
-            existingProfile.setCreatedWaypointCandidate(new ArrayList<>());
+            List<LatLng> createdWaypoints = waypointGenerator.getSurroundingWaypoints(existingProfile);
+            existingProfile.setCreatedWaypointCandidate(createdWaypoints);
             existingProfile.setUpdatedAt(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         } else {
             // 새 프로필 생성
@@ -84,7 +85,8 @@ public class RoutesServiceImpl implements RoutesService {
             existingProfile.setTargetTime(user.getTargetTime());
             existingProfile.setStartCloseWaypoints(new ArrayList<>());
             existingProfile.setEndCloseWaypoints(new ArrayList<>());
-            existingProfile.setCreatedWaypointCandidate(new ArrayList<>());
+            List<LatLng> createdWaypoints = waypointGenerator.getSurroundingWaypoints(existingProfile);
+            existingProfile.setCreatedWaypointCandidate(createdWaypoints);
             existingProfile.setCreatedAt(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
             existingProfile.setUpdatedAt(existingProfile.getCreatedAt());
         }

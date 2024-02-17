@@ -29,7 +29,7 @@ public class RoutesController {
         this.routesService = routesService;
     }
 
-    @GetMapping("/createProfile")
+    @GetMapping("/createRequestProfile")
     public ApiResponse<RouteRequestProfileDto> createRequestProfile(@AuthenticationPrincipal User user) {
         return ApiResponse.onSuccess(CREATED, routesService.createRequestProfile(user));
     }
@@ -40,8 +40,8 @@ public class RoutesController {
         return ApiResponse.onSuccess(OK, response);
     }
 
-    @PostMapping("/editProfile")
-    public ApiResponse<RouteRequestProfileDto> editProfile(@AuthenticationPrincipal User user, @RequestBody RouteRequestProfileDto routesProfileDto) {
+    @PostMapping("/editRequestProfile")
+    public ApiResponse<RouteRequestProfileDto> editRequestProfile(@AuthenticationPrincipal User user, @RequestBody RouteRequestProfileDto routesProfileDto) {
         try {
             return ApiResponse.onSuccess(OK, routesService.editRequestProfile(user.getId(), routesProfileDto));
         } catch (Exception e) {
