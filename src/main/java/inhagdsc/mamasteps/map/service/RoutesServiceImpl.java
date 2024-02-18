@@ -6,12 +6,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import inhagdsc.mamasteps.map.domain.*;
-import inhagdsc.mamasteps.map.dto.RouteDto;
-import inhagdsc.mamasteps.map.dto.RouteRequestProfileDto;
+import inhagdsc.mamasteps.map.dto.requestProfile.EditRequestProfileRequest;
+import inhagdsc.mamasteps.map.dto.requestProfile.EditRequestProfileResponse;
+import inhagdsc.mamasteps.map.dto.requestProfile.GetRequestProfileResponse;
+import inhagdsc.mamasteps.map.dto.route.ComputeRoutesResponse;
+import inhagdsc.mamasteps.map.dto.route.SaveRouteRequest;
 import inhagdsc.mamasteps.map.repository.RouteRepository;
 import inhagdsc.mamasteps.map.repository.RouteRequestProfileRepository;
 import inhagdsc.mamasteps.map.service.tool.PolylineEncoder;
 import inhagdsc.mamasteps.map.service.tool.waypoint.WaypointGenerator;
+import inhagdsc.mamasteps.user.dto.GetRoutesResponse;
 import inhagdsc.mamasteps.user.entity.User;
 import inhagdsc.mamasteps.user.repository.UserRepository;
 import org.json.JSONObject;
@@ -62,9 +66,12 @@ public class RoutesServiceImpl implements RoutesService {
 
     @Override
     @Transactional
-    public RouteRequestProfileDto createRequestProfile(User user) {
+    public void createRequestProfile(User user) {
         Optional<RouteRequestProfileEntity> existingProfileOptional = routeRequestProfileRepository.findByUserId(user.getId());
         RouteRequestProfileEntity existingProfile;
+        if (user.getOrigin() == null) {
+            throw new IllegalArgumentException("no origin in user");
+        }
         if (!existingProfileOptional.isEmpty()) {
             existingProfile = existingProfileOptional.get();
             // 기존 프로필 업데이트
@@ -92,56 +99,61 @@ public class RoutesServiceImpl implements RoutesService {
         }
 
         routeRequestProfileRepository.save(existingProfile);
-        return existingProfile.toDto();
     }
 
-    public RouteRequestProfileDto editRequestProfile(Long userId, RouteRequestProfileDto routeRequestProfileDto) {
+    @Override
+    @Transactional
+    public EditRequestProfileResponse editRequestProfile(Long userId, EditRequestProfileRequest request) {
         RouteRequestProfileEntity requestProfileEntity = routeRequestProfileRepository.findByUserId(userId).get();
-        requestProfileEntity.setTargetTime(routeRequestProfileDto.getTargetTime());
-        requestProfileEntity.setWalkSpeed(routeRequestProfileDto.getWalkSpeed());
-        requestProfileEntity.setStartCloseWaypoints(routeRequestProfileDto.getStartCloseWaypoints());
-        requestProfileEntity.setEndCloseWaypoints(routeRequestProfileDto.getEndCloseWaypoints());
+        if (request.getOrigin() == null) {
+            throw new IllegalArgumentException("no origin in request");
+        }
+        requestProfileEntity.setOrigin(request.getOrigin());
+        requestProfileEntity.setTargetTime(request.getTargetTime());
+        requestProfileEntity.setWalkSpeed(request.getWalkSpeed());
+        requestProfileEntity.setStartCloseWaypoints(request.getStartCloseWaypoints());
+        requestProfileEntity.setEndCloseWaypoints(request.getEndCloseWaypoints());
         List<LatLng> createdWaypoints = waypointGenerator.getSurroundingWaypoints(requestProfileEntity);
         requestProfileEntity.setCreatedWaypointCandidate(createdWaypoints);
         requestProfileEntity.setUpdatedAt(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
         routeRequestProfileRepository.save(requestProfileEntity);
-        return requestProfileEntity.toDto();
+        return new EditRequestProfileResponse(requestProfileEntity);
     }
 
     @Override
-    public RouteRequestProfileDto getRequestProfile(Long userId) {
+    public GetRequestProfileResponse getRequestProfile(Long userId) {
         Optional<RouteRequestProfileEntity> requestProfileEntityOptional = routeRequestProfileRepository.findByUserId(userId);
-
-        if (!requestProfileEntityOptional.isPresent()) {
-            return createRequestProfile(userRepository.findById(userId).get());
+        if (requestProfileEntityOptional.isEmpty()) {
+            throw new IllegalArgumentException("사용자에게 프로필이 없습니다.");
         }
-
-        return requestProfileEntityOptional.get().toDto();
+        return new GetRequestProfileResponse(requestProfileEntityOptional.get());
     }
 
     @Override
     @Transactional
-    public void saveRoute(Long userId, RouteDto routeDto) {
+    public void saveRoute(Long userId, SaveRouteRequest request) {
         RouteEntity routeEntity = new RouteEntity();
         int routeCount = routeRepository.countByUserId(userId);
         routeEntity.setRouteName("내 산책 경로 " + (routeCount + 1));
         routeEntity.setUserId(userId);
-        routeEntity.setWalkSpeed(routeDto.getWalkSpeed());
-        routeEntity.setCreatedWaypoint(routeDto.getCreatedWaypoint());
-        routeEntity.setPolyLine(routeDto.getPolyLine());
-        routeEntity.setTotalDistanceMeters(routeDto.getTotalDistanceMeters());
-        routeEntity.setTotalTimeSeconds(routeDto.getTotalTimeSeconds());
-        routeEntity.setCreatedAt(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        routeEntity.setPolyLine(request.getPolyLine());
+        routeEntity.setTotalDistanceMeters(request.getTotalDistanceMeters());
+        routeEntity.setTotalTimeSeconds(request.getTotalTimeSeconds());
+        routeEntity.setCreatedAt(request.getCreatedAt());
         routeEntity.setUpdatedAt(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
         routeRepository.save(routeEntity);
     }
 
     @Override
-    public List<RouteDto> getRoutes(Long userId) {
+    public List<GetRoutesResponse> getRoutes(Long userId) {
         List<RouteEntity> routeEntities = routeRepository.findByUserId(userId);
-        return RouteEntity.toDtoList(routeEntities);
+        List<GetRoutesResponse> result = new ArrayList<>();
+        for (RouteEntity routeEntity : routeEntities) {
+            result.add(new GetRoutesResponse(routeEntity));
+        }
+        return result;
     }
 
     @Override
@@ -172,7 +184,7 @@ public class RoutesServiceImpl implements RoutesService {
     }
 
     @Override
-    public List<RouteDto> computeRoutes(Long userId) throws IOException {
+    public List<ComputeRoutesResponse> computeRoutes(Long userId) throws IOException {
 
         RouteRequestProfileEntity requestProfileEntity = routeRequestProfileRepository.findByUserId(userId).get();
 
@@ -197,13 +209,12 @@ public class RoutesServiceImpl implements RoutesService {
             routesList = computeRoutesUsingGoogle(requestProfileEntity, selectedWaypoints, timeOverflow);
         }
 
-        routesList = sortRoutesArrayByTime(routesList);
-
-        List<RouteDto> result = new ArrayList<>();
+        List<ComputeRoutesResponse> result = new ArrayList<>();
         for (RouteEntity route : routesList) {
-            result.add(route.toDto());
+            result.add(new ComputeRoutesResponse(route));
         }
 
+        result.sort(Comparator.comparingInt(ComputeRoutesResponse::getTotalTimeSeconds));
         return result;
     }
 

@@ -1,12 +1,13 @@
 package inhagdsc.mamasteps.map.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import inhagdsc.mamasteps.common.ApiResponse;
-import inhagdsc.mamasteps.map.dto.RouteDto;
-import inhagdsc.mamasteps.map.dto.RouteRequestDto;
-import inhagdsc.mamasteps.map.dto.RouteRequestProfileDto;
+import inhagdsc.mamasteps.map.dto.requestProfile.EditRequestProfileRequest;
+import inhagdsc.mamasteps.map.dto.requestProfile.EditRequestProfileResponse;
+import inhagdsc.mamasteps.map.dto.requestProfile.GetRequestProfileResponse;
+import inhagdsc.mamasteps.map.dto.route.ComputeRoutesResponse;
+import inhagdsc.mamasteps.map.dto.route.SaveRouteRequest;
 import inhagdsc.mamasteps.map.service.RoutesService;
+import inhagdsc.mamasteps.user.dto.GetRoutesResponse;
 import inhagdsc.mamasteps.user.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -29,28 +30,37 @@ public class RoutesController {
         this.routesService = routesService;
     }
 
-    @GetMapping("/createRequestProfile")
-    public ApiResponse<RouteRequestProfileDto> createRequestProfile(@AuthenticationPrincipal User user) {
-        return ApiResponse.onSuccess(CREATED, routesService.createRequestProfile(user));
+    @PostMapping("/createRequestProfile")
+    public ApiResponse<Void> createRequestProfile(@AuthenticationPrincipal User user) {
+        try {
+            routesService.createRequestProfile(user);
+            return ApiResponse.onSuccess(CREATED, null);
+        } catch (Exception e) {
+            return ApiResponse.onFailure(FORBIDDEN.getCode(), e.getMessage(), null);
+        }
     }
 
     @GetMapping("/getRequestProfile")
-    public ApiResponse<RouteRequestProfileDto> getRequestProfile(@AuthenticationPrincipal User user) {
-        RouteRequestProfileDto response = routesService.getRequestProfile(user.getId());
-        return ApiResponse.onSuccess(OK, response);
+    public ApiResponse<GetRequestProfileResponse> getRequestProfile(@AuthenticationPrincipal User user) {
+        try {
+            GetRequestProfileResponse response = routesService.getRequestProfile(user.getId());
+            return ApiResponse.onSuccess(OK, response);
+        } catch (Exception e) {
+            return ApiResponse.onFailure(NOT_FOUND.getCode(), e.getMessage(), null);
+        }
     }
 
-    @PostMapping("/editRequestProfile")
-    public ApiResponse<RouteRequestProfileDto> editRequestProfile(@AuthenticationPrincipal User user, @RequestBody RouteRequestProfileDto routesProfileDto) {
+    @PatchMapping("/editRequestProfile")
+    public ApiResponse<EditRequestProfileResponse> editRequestProfile(@AuthenticationPrincipal User user, @RequestBody EditRequestProfileRequest request) {
         try {
-            return ApiResponse.onSuccess(OK, routesService.editRequestProfile(user.getId(), routesProfileDto));
+            return ApiResponse.onSuccess(OK, routesService.editRequestProfile(user.getId(), request));
         } catch (Exception e) {
             return ApiResponse.onFailure(FORBIDDEN.getCode(), e.getMessage(), null);
         }
     }
 
     @PostMapping("/saveRoute")
-    public ApiResponse<Void> saveRoute(@AuthenticationPrincipal User user, @RequestBody RouteDto routeDto) {
+    public ApiResponse<Void> saveRoute(@AuthenticationPrincipal User user, @RequestBody SaveRouteRequest routeDto) {
         try {
             routesService.saveRoute(user.getId(), routeDto);
             return ApiResponse.onSuccess(OK, null);
@@ -60,12 +70,12 @@ public class RoutesController {
     }
 
     @GetMapping("/getRoutes")
-    public ApiResponse<List<RouteDto>> getRoutes(@AuthenticationPrincipal User user) {
-        List<RouteDto> response = routesService.getRoutes(user.getId());
+    public ApiResponse<List<GetRoutesResponse>> getRoutes(@AuthenticationPrincipal User user) {
+        List<GetRoutesResponse> response = routesService.getRoutes(user.getId());
         return ApiResponse.onSuccess(OK, response);
     }
 
-    @PostMapping("/editRouteName/{routeId}")
+    @PatchMapping("/editRouteName/{routeId}")
     public ApiResponse<Void> editRoute(@AuthenticationPrincipal User user, @PathVariable Long routeId, @RequestBody String name) {
         try {
             routesService.editRouteName(user.getId(), routeId, name);
@@ -86,9 +96,9 @@ public class RoutesController {
     }
 
     @GetMapping("/computeRoutes")
-    public ApiResponse<List<RouteDto>> computeRoutes(@AuthenticationPrincipal User user) throws IOException {
+    public ApiResponse<List<ComputeRoutesResponse>> computeRoutes(@AuthenticationPrincipal User user) throws IOException {
         try {
-            List<RouteDto> response = routesService.computeRoutes(user.getId());
+            List<ComputeRoutesResponse> response = routesService.computeRoutes(user.getId());
             return ApiResponse.onSuccess(OK, response);
         } catch (Exception e) {
             return ApiResponse.onFailure(FORBIDDEN.getCode(), e.getMessage(), null);
