@@ -71,7 +71,7 @@ public class RoutesController {
         return ApiResponse.onSuccess(OK, response);
     }
 
-    @PostMapping("/editRouteName/{routeId}")
+    @PatchMapping("/editRouteName/{routeId}")
     public ApiResponse<Void> editRoute(@AuthenticationPrincipal User user, @PathVariable Long routeId, @RequestBody String name) {
         try {
             routesService.editRouteName(user.getId(), routeId, name);

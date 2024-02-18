@@ -1,12 +1,7 @@
 package inhagdsc.mamasteps.map.domain;
 
 import inhagdsc.mamasteps.map.domain.converter.LatLngConverter;
-import inhagdsc.mamasteps.map.dto.RouteDto;
-import inhagdsc.mamasteps.user.entity.User;
 import jakarta.persistence.*;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "routes")
@@ -50,30 +45,6 @@ public class RouteEntity {
 
     @Column(name = "updated_at", columnDefinition = "timestamp")
     private String updatedAt;
-
-    public RouteDto toDto() {
-        RouteDto dto = new RouteDto();
-        dto.setRouteId(this.id);
-        dto.setRouteName(this.routeName);
-        dto.setCreatedWaypoint(this.createdWaypoint);
-        dto.setPolyLine(this.polyLine);
-        dto.setWalkSpeed(this.walkSpeed);
-        dto.setUsedAt(this.usedAt);
-        dto.setEvaluatedHardness(this.evaluatedHardness);
-        dto.setTotalDistanceMeters(this.totalDistanceMeters);
-        dto.setTotalTimeSeconds(this.totalTimeSeconds);
-        dto.setCreatedAt(this.createdAt);
-        dto.setUpdatedAt(this.updatedAt);
-        return dto;
-    }
-
-    public static List<RouteDto> toDtoList(List<RouteEntity> originalList) {
-        List<RouteDto> dtos = new ArrayList<>();
-        for (RouteEntity item : originalList) {
-            dtos.add(item.toDto());
-        }
-        return dtos;
-    }
 
     public Long getId() {
         return id;
