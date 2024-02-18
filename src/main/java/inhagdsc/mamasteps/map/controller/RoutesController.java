@@ -1,10 +1,8 @@
 package inhagdsc.mamasteps.map.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import inhagdsc.mamasteps.common.ApiResponse;
+import inhagdsc.mamasteps.map.dto.GetRequestProfileResponse;
 import inhagdsc.mamasteps.map.dto.RouteDto;
-import inhagdsc.mamasteps.map.dto.RouteRequestDto;
 import inhagdsc.mamasteps.map.dto.RouteRequestProfileDto;
 import inhagdsc.mamasteps.map.service.RoutesService;
 import inhagdsc.mamasteps.user.entity.User;
@@ -29,15 +27,20 @@ public class RoutesController {
         this.routesService = routesService;
     }
 
-    @GetMapping("/createRequestProfile")
-    public ApiResponse<RouteRequestProfileDto> createRequestProfile(@AuthenticationPrincipal User user) {
-        return ApiResponse.onSuccess(CREATED, routesService.createRequestProfile(user));
+    @PostMapping("/createRequestProfile")
+    public ApiResponse<Void> createRequestProfile(@AuthenticationPrincipal User user) {
+        routesService.createRequestProfile(user);
+        return ApiResponse.onSuccess(CREATED, null);
     }
 
     @GetMapping("/getRequestProfile")
-    public ApiResponse<RouteRequestProfileDto> getRequestProfile(@AuthenticationPrincipal User user) {
-        RouteRequestProfileDto response = routesService.getRequestProfile(user.getId());
-        return ApiResponse.onSuccess(OK, response);
+    public ApiResponse<GetRequestProfileResponse> getRequestProfile(@AuthenticationPrincipal User user) {
+        try {
+            GetRequestProfileResponse response = routesService.getRequestProfile(user.getId());
+            return ApiResponse.onSuccess(OK, response);
+        } catch (Exception e) {
+            return ApiResponse.onFailure(NOT_FOUND.getCode(), e.getMessage(), null);
+        }
     }
 
     @PostMapping("/editRequestProfile")

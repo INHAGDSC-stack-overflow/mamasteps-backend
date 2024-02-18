@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import inhagdsc.mamasteps.map.domain.*;
+import inhagdsc.mamasteps.map.dto.GetRequestProfileResponse;
 import inhagdsc.mamasteps.map.dto.RouteDto;
 import inhagdsc.mamasteps.map.dto.RouteRequestProfileDto;
 import inhagdsc.mamasteps.map.repository.RouteRepository;
@@ -62,7 +63,7 @@ public class RoutesServiceImpl implements RoutesService {
 
     @Override
     @Transactional
-    public RouteRequestProfileDto createRequestProfile(User user) {
+    public void createRequestProfile(User user) {
         Optional<RouteRequestProfileEntity> existingProfileOptional = routeRequestProfileRepository.findByUserId(user.getId());
         RouteRequestProfileEntity existingProfile;
         if (!existingProfileOptional.isEmpty()) {
@@ -92,7 +93,6 @@ public class RoutesServiceImpl implements RoutesService {
         }
 
         routeRequestProfileRepository.save(existingProfile);
-        return existingProfile.toDto();
     }
 
     public RouteRequestProfileDto editRequestProfile(Long userId, RouteRequestProfileDto routeRequestProfileDto) {
@@ -110,14 +110,12 @@ public class RoutesServiceImpl implements RoutesService {
     }
 
     @Override
-    public RouteRequestProfileDto getRequestProfile(Long userId) {
+    public GetRequestProfileResponse getRequestProfile(Long userId) {
         Optional<RouteRequestProfileEntity> requestProfileEntityOptional = routeRequestProfileRepository.findByUserId(userId);
-
-        if (!requestProfileEntityOptional.isPresent()) {
-            return createRequestProfile(userRepository.findById(userId).get());
+        if (requestProfileEntityOptional.isEmpty()) {
+            throw new IllegalArgumentException("사용자에게 프로필이 없습니다.");
         }
-
-        return requestProfileEntityOptional.get().toDto();
+        return new GetRequestProfileResponse(requestProfileEntityOptional.get());
     }
 
     @Override
