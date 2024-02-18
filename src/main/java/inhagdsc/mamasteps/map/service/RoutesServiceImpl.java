@@ -127,17 +127,15 @@ public class RoutesServiceImpl implements RoutesService {
 
     @Override
     @Transactional
-    public void saveRoute(Long userId, RouteDto routeDto) {
+    public void saveRoute(Long userId, SaveRouteRequest request) {
         RouteEntity routeEntity = new RouteEntity();
         int routeCount = routeRepository.countByUserId(userId);
         routeEntity.setRouteName("내 산책 경로 " + (routeCount + 1));
         routeEntity.setUserId(userId);
-        routeEntity.setWalkSpeed(routeDto.getWalkSpeed());
-        routeEntity.setCreatedWaypoint(routeDto.getCreatedWaypoint());
-        routeEntity.setPolyLine(routeDto.getPolyLine());
-        routeEntity.setTotalDistanceMeters(routeDto.getTotalDistanceMeters());
-        routeEntity.setTotalTimeSeconds(routeDto.getTotalTimeSeconds());
-        routeEntity.setCreatedAt(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        routeEntity.setPolyLine(request.getPolyLine());
+        routeEntity.setTotalDistanceMeters(request.getTotalDistanceMeters());
+        routeEntity.setTotalTimeSeconds(request.getTotalTimeSeconds());
+        routeEntity.setCreatedAt(request.getCreatedAt());
         routeEntity.setUpdatedAt(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
         routeRepository.save(routeEntity);

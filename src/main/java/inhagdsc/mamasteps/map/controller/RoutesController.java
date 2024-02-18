@@ -55,7 +55,7 @@ public class RoutesController {
     }
 
     @PostMapping("/saveRoute")
-    public ApiResponse<Void> saveRoute(@AuthenticationPrincipal User user, @RequestBody RouteDto routeDto) {
+    public ApiResponse<Void> saveRoute(@AuthenticationPrincipal User user, @RequestBody SaveRouteRequest routeDto) {
         try {
             routesService.saveRoute(user.getId(), routeDto);
             return ApiResponse.onSuccess(OK, null);

@@ -12,7 +12,7 @@ public interface RoutesService {
     public EditRequestProfileResponse editRequestProfile(Long userId, EditRequestProfileRequest routesProfileDto);
     public GetRequestProfileResponse getRequestProfile(Long userId);
     public List<ComputeRoutesResponse> computeRoutes(Long userId) throws IOException;
-    void saveRoute(Long userId, RouteDto routeDto);
+    void saveRoute(Long userId, SaveRouteRequest routeDto);
     List<RouteDto> getRoutes(Long userId);
     void deleteRoute(Long userId, Long routeId);
     void editRouteName(Long userId, Long routeId, String name);
