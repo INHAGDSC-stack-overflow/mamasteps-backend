@@ -2,8 +2,6 @@ package inhagdsc.mamasteps.map.domain;
 
 import inhagdsc.mamasteps.map.domain.converter.LatLngConverter;
 import inhagdsc.mamasteps.map.domain.converter.LatLngListConverter;
-import inhagdsc.mamasteps.map.dto.RouteRequestDto;
-import inhagdsc.mamasteps.map.dto.RouteRequestProfileDto;
 import inhagdsc.mamasteps.user.entity.User;
 import jakarta.persistence.*;
 import org.json.JSONArray;
@@ -55,20 +53,6 @@ public class RouteRequestProfileEntity {
 
     @Column(name = "updated_at", columnDefinition = "timestamp")
     private String updatedAt;
-
-    public RouteRequestProfileDto toDto() {
-        RouteRequestProfileDto dto = new RouteRequestProfileDto();
-        dto.setId(this.id);
-        dto.setTargetTime(this.targetTime);
-        dto.setWalkSpeed(this.walkSpeed);
-        dto.setOrigin(this.origin);
-        dto.setStartCloseWaypoints(this.startCloseWaypoints);
-        dto.setEndCloseWaypoints(this.endCloseWaypoints);
-        dto.setCreatedWaypointCandidate(this.createdWaypointCandidate);
-        dto.setCreatedAt(this.createdAt);
-        dto.setUpdatedAt(this.updatedAt);
-        return dto;
-    }
 
     public JSONObject toGoogleJson() {
         JSONObject json = new JSONObject();
