@@ -1,17 +1,15 @@
-package inhagdsc.mamasteps.map.dto;
+package inhagdsc.mamasteps.map.dto.requestProfile;
 
 import inhagdsc.mamasteps.map.domain.LatLng;
 import inhagdsc.mamasteps.map.domain.RouteRequestProfileEntity;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
 
 @Getter
 @Setter
-@NoArgsConstructor
-public class EditRequestProfileResponse {
+public class GetRequestProfileResponse {
     private int targetTime;
     private double walkSpeed;
     private LatLng origin;
@@ -20,7 +18,7 @@ public class EditRequestProfileResponse {
     private String createdAt;
     private String updatedAt;
 
-    public EditRequestProfileResponse(RouteRequestProfileEntity routeRequestProfileEntity) {
+    public GetRequestProfileResponse(RouteRequestProfileEntity routeRequestProfileEntity) {
         this.targetTime = routeRequestProfileEntity.getTargetTime();
         this.walkSpeed = routeRequestProfileEntity.getWalkSpeed();
         this.origin = routeRequestProfileEntity.getOrigin();
@@ -28,21 +26,5 @@ public class EditRequestProfileResponse {
         this.endCloseWaypoints = routeRequestProfileEntity.getEndCloseWaypoints();
         this.createdAt = routeRequestProfileEntity.getCreatedAt();
         this.updatedAt = routeRequestProfileEntity.getUpdatedAt();
-    }
-
-    public List<LatLng> getStartCloseWaypoints() {
-        return startCloseWaypoints;
-    }
-
-    public void setStartCloseWaypoints(List<LatLng> startCloseWaypoints) {
-        this.startCloseWaypoints = startCloseWaypoints;
-    }
-
-    public List<LatLng> getEndCloseWaypoints() {
-        return endCloseWaypoints;
-    }
-
-    public void setEndCloseWaypoints(List<LatLng> endCloseWaypoints) {
-        this.endCloseWaypoints = endCloseWaypoints;
     }
 }

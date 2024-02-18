@@ -1,4 +1,4 @@
-package inhagdsc.mamasteps.map.dto;
+package inhagdsc.mamasteps.map.dto.route;
 
 import inhagdsc.mamasteps.map.domain.RouteEntity;
 import lombok.Getter;

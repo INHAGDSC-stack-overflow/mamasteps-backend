@@ -1,4 +1,4 @@
-package inhagdsc.mamasteps.map.dto;
+package inhagdsc.mamasteps.map.dto.requestProfile;
 
 import inhagdsc.mamasteps.map.domain.LatLng;
 import inhagdsc.mamasteps.map.domain.RouteRequestProfileEntity;

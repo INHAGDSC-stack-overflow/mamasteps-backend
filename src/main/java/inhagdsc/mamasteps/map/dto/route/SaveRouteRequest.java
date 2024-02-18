@@ -1,4 +1,4 @@
-package inhagdsc.mamasteps.map.dto;
+package inhagdsc.mamasteps.map.dto.route;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

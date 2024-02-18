@@ -1,7 +1,11 @@
 package inhagdsc.mamasteps.map.service;
 
 
-import inhagdsc.mamasteps.map.dto.*;
+import inhagdsc.mamasteps.map.dto.requestProfile.EditRequestProfileRequest;
+import inhagdsc.mamasteps.map.dto.requestProfile.EditRequestProfileResponse;
+import inhagdsc.mamasteps.map.dto.requestProfile.GetRequestProfileResponse;
+import inhagdsc.mamasteps.map.dto.route.ComputeRoutesResponse;
+import inhagdsc.mamasteps.map.dto.route.SaveRouteRequest;
 import inhagdsc.mamasteps.user.dto.GetRoutesResponse;
 import inhagdsc.mamasteps.user.entity.User;
 
