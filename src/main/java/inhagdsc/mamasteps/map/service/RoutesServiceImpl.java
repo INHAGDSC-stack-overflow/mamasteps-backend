@@ -97,6 +97,10 @@ public class RoutesServiceImpl implements RoutesService {
     @Transactional
     public EditRequestProfileResponse editRequestProfile(Long userId, EditRequestProfileRequest request) {
         RouteRequestProfileEntity requestProfileEntity = routeRequestProfileRepository.findByUserId(userId).get();
+        if (request.getOrigin() == null) {
+            throw new IllegalArgumentException("no origin in request");
+        }
+        requestProfileEntity.setOrigin(request.getOrigin());
         requestProfileEntity.setTargetTime(request.getTargetTime());
         requestProfileEntity.setWalkSpeed(request.getWalkSpeed());
         requestProfileEntity.setStartCloseWaypoints(request.getStartCloseWaypoints());
