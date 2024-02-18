@@ -6,9 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import inhagdsc.mamasteps.map.domain.*;
-import inhagdsc.mamasteps.map.dto.GetRequestProfileResponse;
-import inhagdsc.mamasteps.map.dto.RouteDto;
-import inhagdsc.mamasteps.map.dto.RouteRequestProfileDto;
+import inhagdsc.mamasteps.map.dto.*;
 import inhagdsc.mamasteps.map.repository.RouteRepository;
 import inhagdsc.mamasteps.map.repository.RouteRequestProfileRepository;
 import inhagdsc.mamasteps.map.service.tool.PolylineEncoder;
@@ -95,18 +93,20 @@ public class RoutesServiceImpl implements RoutesService {
         routeRequestProfileRepository.save(existingProfile);
     }
 
-    public RouteRequestProfileDto editRequestProfile(Long userId, RouteRequestProfileDto routeRequestProfileDto) {
+    @Override
+    @Transactional
+    public EditRequestProfileResponse editRequestProfile(Long userId, EditRequestProfileRequest request) {
         RouteRequestProfileEntity requestProfileEntity = routeRequestProfileRepository.findByUserId(userId).get();
-        requestProfileEntity.setTargetTime(routeRequestProfileDto.getTargetTime());
-        requestProfileEntity.setWalkSpeed(routeRequestProfileDto.getWalkSpeed());
-        requestProfileEntity.setStartCloseWaypoints(routeRequestProfileDto.getStartCloseWaypoints());
-        requestProfileEntity.setEndCloseWaypoints(routeRequestProfileDto.getEndCloseWaypoints());
+        requestProfileEntity.setTargetTime(request.getTargetTime());
+        requestProfileEntity.setWalkSpeed(request.getWalkSpeed());
+        requestProfileEntity.setStartCloseWaypoints(request.getStartCloseWaypoints());
+        requestProfileEntity.setEndCloseWaypoints(request.getEndCloseWaypoints());
         List<LatLng> createdWaypoints = waypointGenerator.getSurroundingWaypoints(requestProfileEntity);
         requestProfileEntity.setCreatedWaypointCandidate(createdWaypoints);
         requestProfileEntity.setUpdatedAt(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
         routeRequestProfileRepository.save(requestProfileEntity);
-        return requestProfileEntity.toDto();
+        return new EditRequestProfileResponse(requestProfileEntity);
     }
 
     @Override

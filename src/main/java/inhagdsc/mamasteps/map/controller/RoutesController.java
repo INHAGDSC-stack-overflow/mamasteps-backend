@@ -1,9 +1,7 @@
 package inhagdsc.mamasteps.map.controller;
 
 import inhagdsc.mamasteps.common.ApiResponse;
-import inhagdsc.mamasteps.map.dto.GetRequestProfileResponse;
-import inhagdsc.mamasteps.map.dto.RouteDto;
-import inhagdsc.mamasteps.map.dto.RouteRequestProfileDto;
+import inhagdsc.mamasteps.map.dto.*;
 import inhagdsc.mamasteps.map.service.RoutesService;
 import inhagdsc.mamasteps.user.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,10 +41,10 @@ public class RoutesController {
         }
     }
 
-    @PostMapping("/editRequestProfile")
-    public ApiResponse<RouteRequestProfileDto> editRequestProfile(@AuthenticationPrincipal User user, @RequestBody RouteRequestProfileDto routesProfileDto) {
+    @PatchMapping("/editRequestProfile")
+    public ApiResponse<EditRequestProfileResponse> editRequestProfile(@AuthenticationPrincipal User user, @RequestBody EditRequestProfileRequest request) {
         try {
-            return ApiResponse.onSuccess(OK, routesService.editRequestProfile(user.getId(), routesProfileDto));
+            return ApiResponse.onSuccess(OK, routesService.editRequestProfile(user.getId(), request));
         } catch (Exception e) {
             return ApiResponse.onFailure(FORBIDDEN.getCode(), e.getMessage(), null);
         }
