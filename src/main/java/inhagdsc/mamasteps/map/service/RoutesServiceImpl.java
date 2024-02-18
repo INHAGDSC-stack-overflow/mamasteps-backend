@@ -64,6 +64,9 @@ public class RoutesServiceImpl implements RoutesService {
     public void createRequestProfile(User user) {
         Optional<RouteRequestProfileEntity> existingProfileOptional = routeRequestProfileRepository.findByUserId(user.getId());
         RouteRequestProfileEntity existingProfile;
+        if (user.getOrigin() == null) {
+            throw new IllegalArgumentException("no origin in user");
+        }
         if (!existingProfileOptional.isEmpty()) {
             existingProfile = existingProfileOptional.get();
             // 기존 프로필 업데이트

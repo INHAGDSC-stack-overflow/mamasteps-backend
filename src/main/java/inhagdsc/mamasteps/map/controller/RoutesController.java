@@ -27,8 +27,12 @@ public class RoutesController {
 
     @PostMapping("/createRequestProfile")
     public ApiResponse<Void> createRequestProfile(@AuthenticationPrincipal User user) {
-        routesService.createRequestProfile(user);
-        return ApiResponse.onSuccess(CREATED, null);
+        try {
+            routesService.createRequestProfile(user);
+            return ApiResponse.onSuccess(CREATED, null);
+        } catch (Exception e) {
+            return ApiResponse.onFailure(FORBIDDEN.getCode(), e.getMessage(), null);
+        }
     }
 
     @GetMapping("/getRequestProfile")
