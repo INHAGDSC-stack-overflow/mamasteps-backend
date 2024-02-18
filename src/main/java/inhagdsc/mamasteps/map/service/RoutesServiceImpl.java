@@ -177,7 +177,7 @@ public class RoutesServiceImpl implements RoutesService {
     }
 
     @Override
-    public List<RouteDto> computeRoutes(Long userId) throws IOException {
+    public List<ComputeRoutesResponse> computeRoutes(Long userId) throws IOException {
 
         RouteRequestProfileEntity requestProfileEntity = routeRequestProfileRepository.findByUserId(userId).get();
 
@@ -202,13 +202,12 @@ public class RoutesServiceImpl implements RoutesService {
             routesList = computeRoutesUsingGoogle(requestProfileEntity, selectedWaypoints, timeOverflow);
         }
 
-        routesList = sortRoutesArrayByTime(routesList);
-
-        List<RouteDto> result = new ArrayList<>();
+        List<ComputeRoutesResponse> result = new ArrayList<>();
         for (RouteEntity route : routesList) {
-            result.add(route.toDto());
+            result.add(new ComputeRoutesResponse(route));
         }
 
+        result.sort(Comparator.comparingInt(ComputeRoutesResponse::getTotalTimeSeconds));
         return result;
     }
 

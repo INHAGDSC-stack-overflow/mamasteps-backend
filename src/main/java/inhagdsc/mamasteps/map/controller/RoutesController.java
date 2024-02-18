@@ -91,9 +91,9 @@ public class RoutesController {
     }
 
     @GetMapping("/computeRoutes")
-    public ApiResponse<List<RouteDto>> computeRoutes(@AuthenticationPrincipal User user) throws IOException {
+    public ApiResponse<List<ComputeRoutesResponse>> computeRoutes(@AuthenticationPrincipal User user) throws IOException {
         try {
-            List<RouteDto> response = routesService.computeRoutes(user.getId());
+            List<ComputeRoutesResponse> response = routesService.computeRoutes(user.getId());
             return ApiResponse.onSuccess(OK, response);
         } catch (Exception e) {
             return ApiResponse.onFailure(FORBIDDEN.getCode(), e.getMessage(), null);
