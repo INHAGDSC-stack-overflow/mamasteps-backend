@@ -11,6 +11,7 @@ import inhagdsc.mamasteps.map.repository.RouteRepository;
 import inhagdsc.mamasteps.map.repository.RouteRequestProfileRepository;
 import inhagdsc.mamasteps.map.service.tool.PolylineEncoder;
 import inhagdsc.mamasteps.map.service.tool.waypoint.WaypointGenerator;
+import inhagdsc.mamasteps.user.dto.GetRoutesResponse;
 import inhagdsc.mamasteps.user.entity.User;
 import inhagdsc.mamasteps.user.repository.UserRepository;
 import org.json.JSONObject;
@@ -142,9 +143,13 @@ public class RoutesServiceImpl implements RoutesService {
     }
 
     @Override
-    public List<RouteDto> getRoutes(Long userId) {
+    public List<GetRoutesResponse> getRoutes(Long userId) {
         List<RouteEntity> routeEntities = routeRepository.findByUserId(userId);
-        return RouteEntity.toDtoList(routeEntities);
+        List<GetRoutesResponse> result = new ArrayList<>();
+        for (RouteEntity routeEntity : routeEntities) {
+            result.add(new GetRoutesResponse(routeEntity));
+        }
+        return result;
     }
 
     @Override

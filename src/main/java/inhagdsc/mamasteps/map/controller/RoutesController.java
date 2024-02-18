@@ -3,6 +3,7 @@ package inhagdsc.mamasteps.map.controller;
 import inhagdsc.mamasteps.common.ApiResponse;
 import inhagdsc.mamasteps.map.dto.*;
 import inhagdsc.mamasteps.map.service.RoutesService;
+import inhagdsc.mamasteps.user.dto.GetRoutesResponse;
 import inhagdsc.mamasteps.user.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -65,8 +66,8 @@ public class RoutesController {
     }
 
     @GetMapping("/getRoutes")
-    public ApiResponse<List<RouteDto>> getRoutes(@AuthenticationPrincipal User user) {
-        List<RouteDto> response = routesService.getRoutes(user.getId());
+    public ApiResponse<List<GetRoutesResponse>> getRoutes(@AuthenticationPrincipal User user) {
+        List<GetRoutesResponse> response = routesService.getRoutes(user.getId());
         return ApiResponse.onSuccess(OK, response);
     }
 
