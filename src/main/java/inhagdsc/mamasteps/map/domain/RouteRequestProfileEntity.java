@@ -148,7 +148,7 @@ public class RouteRequestProfileEntity {
         this.endCloseWaypoints = endCloseWaypoints;
     }
 
-    public List<LatLng> getCreatedWaypointCandidate() {
+    public List<LatLng> getCreatedWaypointCandidates() {
         return createdWaypointCandidate;
     }
 
