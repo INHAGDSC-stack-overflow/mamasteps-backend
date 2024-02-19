@@ -1,14 +1,14 @@
 package inhagdsc.mamasteps.calendar.dto;
 
 import inhagdsc.mamasteps.calendar.domain.ScheduleEntity;
-import inhagdsc.mamasteps.map.domain.RouteEntity;
-import jakarta.persistence.Column;
+
+import java.time.LocalDateTime;
 
 public class ScheduleDto {
 
     private Long id;
     private Long routeId;
-    private String date;
+    private LocalDateTime date;
     private int targetTimeSeconds;
     private String createdAt;
     private String updatedAt;
@@ -17,7 +17,7 @@ public class ScheduleDto {
         ScheduleEntity scheduleEntity = new ScheduleEntity();
         scheduleEntity.setId(id);
         scheduleEntity.setRouteId(routeId);
-        scheduleEntity.setDate(date);
+        scheduleEntity.setStartAt(date);
         scheduleEntity.setTargetTimeSeconds(targetTimeSeconds);
         scheduleEntity.setCreatedAt(createdAt);
         scheduleEntity.setUpdatedAt(updatedAt);
@@ -32,11 +32,11 @@ public class ScheduleDto {
         this.id = id;
     }
 
-    public String getDate() {
+    public LocalDateTime getDate() {
         return date;
     }
 
-    public void setDate(String date) {
+    public void setDate(LocalDateTime date) {
         this.date = date;
     }
 

@@ -4,6 +4,7 @@ import inhagdsc.mamasteps.calendar.domain.RecordEntity;
 import inhagdsc.mamasteps.calendar.domain.ScheduleEntity;
 import inhagdsc.mamasteps.calendar.dto.RecordDto;
 import inhagdsc.mamasteps.calendar.dto.ScheduleDto;
+import inhagdsc.mamasteps.user.entity.User;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,4 +27,6 @@ public interface CalendarService {
     void editRecord(Long recordId, RecordEntity recordEntity);
 
     void deleteRecord(Long userId, Long recordId);
+
+    void createAutoSchedule(User user);
 }

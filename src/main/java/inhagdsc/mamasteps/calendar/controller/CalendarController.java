@@ -102,4 +102,10 @@ public class CalendarController {
             return ApiResponse.onFailure(FORBIDDEN.getCode(), e.getMessage(), null);
         }
     }
+
+    @PostMapping("/createAutoSchedule")
+    public ApiResponse<Void> createAutoSchedule(@AuthenticationPrincipal User user) {
+        calendarService.createAutoSchedule(user);
+        return ApiResponse.onSuccess(OK, null);
+    }
 }
