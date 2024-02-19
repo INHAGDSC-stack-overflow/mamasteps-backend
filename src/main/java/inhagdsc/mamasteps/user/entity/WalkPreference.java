@@ -1,7 +1,7 @@
 package inhagdsc.mamasteps.user.entity;
 
 import inhagdsc.mamasteps.common.BaseTimeEntity;
-import inhagdsc.mamasteps.user.entity.enums.DayOfWeek;
+import java.time.DayOfWeek;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

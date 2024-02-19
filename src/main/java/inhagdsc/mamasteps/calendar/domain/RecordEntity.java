@@ -1,8 +1,9 @@
 package inhagdsc.mamasteps.calendar.domain;
 
 import inhagdsc.mamasteps.calendar.dto.RecordDto;
-import inhagdsc.mamasteps.map.domain.RouteEntity;
 import jakarta.persistence.*;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "records")
@@ -19,8 +20,8 @@ public class RecordEntity {
     @Column(name = "route_id", nullable = true)
     private Long routeId;
 
-    @Column(name = "date", columnDefinition = "timestamp")
-    private String date;
+    @Column(name = "start-at")
+    private LocalDateTime startAt;
 
     @Column(name = "completed_time_seconds")
     private int completedTimeSeconds;
@@ -35,7 +36,7 @@ public class RecordEntity {
         RecordDto dto = new RecordDto();
         dto.setId(this.getId());
         dto.setRouteId(this.getRouteId());
-        dto.setDate(this.getDate());
+        dto.setDate(this.getStartAt());
         dto.setCompletedTimeSeconds(this.getCompletedTimeSeconds());
         dto.setCreatedAt(this.getCreatedAt());
         dto.setUpdatedAt(this.getUpdatedAt());
@@ -44,7 +45,7 @@ public class RecordEntity {
 
     public void update(RecordEntity recordEntity) {
         this.routeId = recordEntity.getRouteId();
-        this.date = recordEntity.getDate();
+        this.startAt = recordEntity.getStartAt();
         this.completedTimeSeconds = recordEntity.getCompletedTimeSeconds();
         this.updatedAt = recordEntity.getUpdatedAt();
     }
@@ -65,12 +66,12 @@ public class RecordEntity {
         this.userId = userId;
     }
 
-    public String getDate() {
-        return date;
+    public LocalDateTime getStartAt() {
+        return startAt;
     }
 
-    public void setDate(String date) {
-        this.date = date;
+    public void setStartAt(LocalDateTime date) {
+        this.startAt = date;
     }
 
     public String getCreatedAt() {
