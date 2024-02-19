@@ -139,6 +139,9 @@ public class CalendarServiceImpl implements CalendarService {
                 LocalDate startDate = now.plusDays(calculateDayOfWeekDistance(preference.getDayOfWeek(), dayOfWeek) + 1);
                 LocalTime startTime = preference.getStartTime();
                 LocalDateTime startAt = LocalDateTime.of(startDate, startTime);
+                if (scheduleRepository.existsByUserIdAndStartAt(user.getId(), startAt)) {
+                    continue;
+                }
                 scheduleEntity.setUserId(user.getId());
                 scheduleEntity.setStartAt(startAt);
                 scheduleEntity.setTargetTimeSeconds(recommendedWalkTimeSeconds);
