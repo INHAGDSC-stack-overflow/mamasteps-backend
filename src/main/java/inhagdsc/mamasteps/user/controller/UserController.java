@@ -2,6 +2,7 @@ package inhagdsc.mamasteps.user.controller;
 
 import inhagdsc.mamasteps.common.ApiResponse;
 import inhagdsc.mamasteps.common.code.status.SuccessStatus;
+import inhagdsc.mamasteps.map.domain.LatLng;
 import inhagdsc.mamasteps.user.dto.*;
 import inhagdsc.mamasteps.user.entity.User;
 import inhagdsc.mamasteps.user.service.UserService;
@@ -22,6 +23,11 @@ import static inhagdsc.mamasteps.common.code.status.SuccessStatus.*;
 public class UserController {
 
     private final UserService userService;
+
+    @PostMapping("/set-origin")
+    public ApiResponse<SetOriginResponse> setOrigin(@AuthenticationPrincipal User user, @RequestBody SetOriginRequest request) {
+        return ApiResponse.onSuccess(OK, userService.setOrigin(user.getId(), request));
+    }
 
     @GetMapping("/me")
     public ApiResponse<UserInfoResponse> getMyInfo(@AuthenticationPrincipal User user) { //로그인 시 유저 정보 가져옴

@@ -63,6 +63,18 @@ public class UserServiceImpl implements UserService {
         return UserConverter.toChangeProfileResponse(user);
     }
 
+    @Override
+    @Transactional
+    public SetOriginResponse setOrigin(Long userId, SetOriginRequest request) {
+        User user = userRepository.findById(userId).get();
+        user.setOrigin(request.getOrigin());
+        userRepository.save(user);
+
+        SetOriginResponse response = new SetOriginResponse();
+        response.setOrigin(userRepository.findById(userId).get().getOrigin());
+        return response;
+    }
+
     private User findById(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new UserHandler(USER_NOT_FOUND));

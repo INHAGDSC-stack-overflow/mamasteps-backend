@@ -1,11 +1,7 @@
 package inhagdsc.mamasteps.map.domain;
 
 import inhagdsc.mamasteps.map.domain.converter.LatLngConverter;
-import inhagdsc.mamasteps.map.dto.RouteDto;
 import jakarta.persistence.*;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "routes")
@@ -13,12 +9,14 @@ public class RouteEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "route_id", nullable = false)
+    @Column(name = "id", nullable = false)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "routes_profile_id", nullable = false)
-    private RoutesProfileEntity routesProfile;
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
+
+    @Column(name = "route_name")
+    private String routeName;
 
     @Column(name = "created_waypoint", columnDefinition = "json")
     @Convert(converter = LatLngConverter.class)
@@ -33,47 +31,35 @@ public class RouteEntity {
     @Column(name = "total_time_seconds")
     private Integer totalTimeSeconds;
 
+    @Column(name = "walk_speed")
+    private double walkSpeed;
+
+    @Column(name = "used_at", columnDefinition = "timestamp")
+    private String usedAt;
+
+    @Column(name = "evaluated_hardness")
+    private int evaluatedHardness;
+
     @Column(name = "created_at", columnDefinition = "timestamp")
     private String createdAt;
 
     @Column(name = "updated_at", columnDefinition = "timestamp")
     private String updatedAt;
 
-    public RouteDto toDto() {
-        RouteDto dto = new RouteDto();
-        dto.setRouteId(this.id);
-        dto.setRoutesProfileId(this.routesProfile.getId());
-        dto.setCreatedWaypoint(this.createdWaypoint);
-        dto.setPolyLine(this.polyLine);
-        dto.setTotalDistanceMeters(this.totalDistanceMeters);
-        dto.setTotalTimeSeconds(this.totalTimeSeconds);
-        dto.setCreatedAt(this.createdAt);
-        dto.setUpdatedAt(this.updatedAt);
-        return dto;
-    }
-
-    public static List<RouteDto> toDtoList(List<RouteEntity> originalList) {
-        List<RouteDto> dtos = new ArrayList<>();
-        for (RouteEntity item : originalList) {
-            dtos.add(item.toDto());
-        }
-        return dtos;
-    }
-
     public Long getId() {
         return id;
     }
 
-    public void setId(Long routeId) {
-        this.id = routeId;
+    public void setId(Long id) {
+        this.id = id;
     }
 
-    public RoutesProfileEntity getRoutesProfile() {
-        return routesProfile;
+    public LatLng getCreatedWaypoint() {
+        return createdWaypoint;
     }
 
-    public void setRoutesProfile(RoutesProfileEntity routesProfile) {
-        this.routesProfile = routesProfile;
+    public void setCreatedWaypoint(LatLng createdWaypoint) {
+        this.createdWaypoint = createdWaypoint;
     }
 
     public String getPolyLine() {
@@ -88,16 +74,40 @@ public class RouteEntity {
         return totalDistanceMeters;
     }
 
-    public void setTotalDistanceMeters(Double pathDistance) {
-        this.totalDistanceMeters = pathDistance;
+    public void setTotalDistanceMeters(Double totalDistanceMeters) {
+        this.totalDistanceMeters = totalDistanceMeters;
     }
 
     public Integer getTotalTimeSeconds() {
         return totalTimeSeconds;
     }
 
-    public void setTotalTimeSeconds(Integer requiredTime) {
-        this.totalTimeSeconds = requiredTime;
+    public void setTotalTimeSeconds(Integer totalTimeSeconds) {
+        this.totalTimeSeconds = totalTimeSeconds;
+    }
+
+    public double getWalkSpeed() {
+        return walkSpeed;
+    }
+
+    public void setWalkSpeed(double walkSpeed) {
+        this.walkSpeed = walkSpeed;
+    }
+
+    public String getUsedAt() {
+        return usedAt;
+    }
+
+    public void setUsedAt(String usedAt) {
+        this.usedAt = usedAt;
+    }
+
+    public int getEvaluatedHardness() {
+        return evaluatedHardness;
+    }
+
+    public void setEvaluatedHardness(int evaluatedHardness) {
+        this.evaluatedHardness = evaluatedHardness;
     }
 
     public String getCreatedAt() {
@@ -116,11 +126,19 @@ public class RouteEntity {
         this.updatedAt = updatedAt;
     }
 
-    public LatLng getCreatedWaypoint() {
-        return createdWaypoint;
+    public Long getUserId() {
+        return userId;
     }
 
-    public void setCreatedWaypoint(LatLng latlng) {
-        this.createdWaypoint = latlng;
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    public String getRouteName() {
+        return routeName;
+    }
+
+    public void setRouteName(String routeName) {
+        this.routeName = routeName;
     }
 }

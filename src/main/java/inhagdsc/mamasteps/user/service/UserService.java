@@ -12,4 +12,6 @@ public interface UserService {
     ChangePasswordResponse changePassword(Long userId, ChangePasswordRequest request); //비밀번호 변경
 
     ChangeProfileResponse updateProfile(Long userId, MultipartFile profileImage);
+
+    SetOriginResponse setOrigin(Long userId, SetOriginRequest request);
 }

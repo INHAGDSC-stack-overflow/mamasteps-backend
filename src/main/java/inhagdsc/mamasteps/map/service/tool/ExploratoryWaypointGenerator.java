@@ -1,7 +1,7 @@
-package inhagdsc.mamasteps.map.service.tool.waypoint;
+package inhagdsc.mamasteps.map.service.tool;
 
 import inhagdsc.mamasteps.map.domain.LatLng;
-import inhagdsc.mamasteps.map.domain.RouteRequestEntity;
+import inhagdsc.mamasteps.map.domain.RouteRequestProfileEntity;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
@@ -16,19 +16,14 @@ public class ExploratoryWaypointGenerator implements WaypointGenerator {
     private int DIVISION;
     @Value("${DISTANCE_FACTOR}")
     private double DISTANCE_FACTOR;
-    private int targetTime;
-    private LatLng origin;
-    private List<LatLng> startCloseIntermediates;
-    private List<LatLng> endCloseIntermediates;
 
-    public void setRouteRequestEntity(RouteRequestEntity routeRequestEntity) {
-        this.targetTime = routeRequestEntity.getTargetTime();
-        this.origin = routeRequestEntity.getOrigin();
-        this.startCloseIntermediates = routeRequestEntity.getStartCloseIntermediates();
-        this.endCloseIntermediates = routeRequestEntity.getEndCloseIntermediates();
-    }
+    public List<LatLng> getSurroundingWaypoints(RouteRequestProfileEntity requestProfileEntity) {
 
-    public List<LatLng> getSurroundingWaypoints() {
+        int targetTime = requestProfileEntity.getTargetTime();
+        double walkSpeed = requestProfileEntity.getWalkSpeed();
+        LatLng origin = requestProfileEntity.getOrigin();
+        List<LatLng> startCloseIntermediates = requestProfileEntity.getStartCloseWaypoints();
+        List<LatLng> endCloseIntermediates = requestProfileEntity.getEndCloseWaypoints();
 
         LatLng nextOfTarget;
         if (endCloseIntermediates.isEmpty()) {
@@ -51,7 +46,7 @@ public class ExploratoryWaypointGenerator implements WaypointGenerator {
         double largerLat = Math.max(previousOfTarget.getLatitude(), nextOfTarget.getLatitude());
         double largerLng = Math.max(previousOfTarget.getLongitude(), nextOfTarget.getLongitude());
 
-        double requiredDistance = getRequiredDistance();
+        double requiredDistance = getRequiredDistance(endCloseIntermediates, startCloseIntermediates, origin, walkSpeed, targetTime);
         double requiredDistanceInLatitude = requiredDistance / 111;
         double requiredDistanceInLongitude = (requiredDistance / 111) / Math.cos(Math.toRadians(previousOfTarget.getLatitude()));
 
@@ -104,7 +99,7 @@ public class ExploratoryWaypointGenerator implements WaypointGenerator {
                 );
     }
 
-    private double getRequiredDistance() {
+    private double getRequiredDistance(List<LatLng> endCloseIntermediates, List<LatLng> startCloseIntermediates, LatLng origin, double walkSpeed, int targetTime) {
         List<LatLng> endCloseWaypoints = LatLng.deepCopyList(endCloseIntermediates);
         List<LatLng> startCloseWaypoints = LatLng.deepCopyList(startCloseIntermediates);
         endCloseWaypoints.add(origin);
@@ -112,7 +107,7 @@ public class ExploratoryWaypointGenerator implements WaypointGenerator {
 
         double sumOfTerms = getDistanceBetweenLots(startCloseWaypoints) + getDistanceBetweenLots(endCloseWaypoints);
 
-        return ((3.5 * targetTime / 60) - sumOfTerms) * DISTANCE_FACTOR;
+        return ((walkSpeed * ((double)targetTime / 3600)) - sumOfTerms) * DISTANCE_FACTOR;
     }
 
     private double getDistanceBetweenLots(List<LatLng> waypoints) {

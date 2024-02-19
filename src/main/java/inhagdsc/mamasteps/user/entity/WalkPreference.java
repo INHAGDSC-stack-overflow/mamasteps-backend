@@ -1,12 +1,14 @@
 package inhagdsc.mamasteps.user.entity;
 
 import inhagdsc.mamasteps.common.BaseTimeEntity;
-import inhagdsc.mamasteps.user.entity.enums.DayOfWeek;
+import java.time.DayOfWeek;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalTime;
 
 
 @Builder
@@ -28,9 +30,9 @@ public class WalkPreference extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private DayOfWeek dayOfWeek;
 
-    private String startTime;
+    private LocalTime startTime;
 
-    private String endTime;
+    private LocalTime endTime;
 
     public void setUser(User user) {
         this.user = user;

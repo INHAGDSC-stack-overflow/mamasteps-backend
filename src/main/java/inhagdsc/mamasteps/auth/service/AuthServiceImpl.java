@@ -8,6 +8,7 @@ import inhagdsc.mamasteps.user.entity.User;
 import inhagdsc.mamasteps.user.entity.WalkPreference;
 import inhagdsc.mamasteps.user.entity.enums.Role;
 import inhagdsc.mamasteps.user.repository.UserRepository;
+import inhagdsc.mamasteps.user.service.WorkoutOptimizeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -17,6 +18,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 
 import static inhagdsc.mamasteps.common.code.status.ErrorStatus.USER_ALREADY_EXIST;
@@ -31,6 +36,7 @@ public class AuthServiceImpl implements AuthService {
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
   private final AuthenticationManager authenticationManager;
+  private final WorkoutOptimizeService workoutOptimizeService;
   private final JwtProvider jwtProvider;
 
   @Override
@@ -64,7 +70,7 @@ public class AuthServiceImpl implements AuthService {
   private User createUser(SignupRequest request) {
     userRepository.findByEmail(request.getEmail()).ifPresent(user -> {
       throw new UserHandler(USER_ALREADY_EXIST);});
-    return User.builder()
+    User user = User.builder()
             .email(request.getEmail())
             .name(request.getName())
             .age(request.getAge())
@@ -72,9 +78,14 @@ public class AuthServiceImpl implements AuthService {
             .guardianPhoneNumber(request.getGuardianPhoneNumber())
             .activityLevel(request.getActivityLevel())
             .profileImageUrl(request.getProfileImage())
+            .walkCount(0)
             .walkPreferences(new ArrayList<>())
             .role(Role.USER)
             .build();
+
+    workoutOptimizeService.initWalkSpeedAndTime(user, request.getActivityLevel());
+
+    return user;
   }
   private static void createWalkPreferences(SignupRequest request, User user) {
     if (request.getWalkPreferences() != null) {
