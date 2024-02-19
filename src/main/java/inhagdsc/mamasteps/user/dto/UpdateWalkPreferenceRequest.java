@@ -1,5 +1,7 @@
 package inhagdsc.mamasteps.user.dto;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import inhagdsc.mamasteps.common.deserializer.LocalTimeDeserializer;
 import inhagdsc.mamasteps.user.entity.WalkPreference;
 import inhagdsc.mamasteps.user.entity.enums.DayOfWeek;
 import lombok.AllArgsConstructor;
@@ -16,8 +18,10 @@ import java.time.LocalTime;
 public class UpdateWalkPreferenceRequest {
 
     private DayOfWeek dayOfWeek;
-    private String startTime;
-    private String endTime;
+    @JsonDeserialize(using = LocalTimeDeserializer.class)
+    private LocalTime startTime;
+    @JsonDeserialize(using = LocalTimeDeserializer.class)
+    private LocalTime endTime;
     public WalkPreference toEntity() {
         return WalkPreference.builder()
                 .dayOfWeek(this.dayOfWeek)
