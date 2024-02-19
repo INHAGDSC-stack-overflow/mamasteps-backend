@@ -1,9 +1,5 @@
 package inhagdsc.mamasteps.map.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import inhagdsc.mamasteps.map.domain.*;
 import inhagdsc.mamasteps.map.dto.requestProfile.EditRequestProfileRequest;
@@ -13,19 +9,20 @@ import inhagdsc.mamasteps.map.dto.route.ComputeRoutesResponse;
 import inhagdsc.mamasteps.map.dto.route.SaveRouteRequest;
 import inhagdsc.mamasteps.map.repository.RouteRepository;
 import inhagdsc.mamasteps.map.repository.RouteRequestProfileRepository;
+import inhagdsc.mamasteps.map.service.regional.GoogleApiService;
+import inhagdsc.mamasteps.map.service.regional.RegionalRouteApiService;
+import inhagdsc.mamasteps.map.service.regional.TmapApiService;
 import inhagdsc.mamasteps.map.service.tool.PolylineEncoder;
-import inhagdsc.mamasteps.map.service.tool.waypoint.WaypointGenerator;
+import inhagdsc.mamasteps.map.service.tool.WaypointGenerator;
 import inhagdsc.mamasteps.user.dto.GetRoutesResponse;
 import inhagdsc.mamasteps.user.entity.User;
 import inhagdsc.mamasteps.user.repository.UserRepository;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -34,30 +31,19 @@ import java.util.*;
 
 @Service
 public class RoutesServiceImpl implements RoutesService {
-    @Value("${GOOGLE_API_KEY}")
-    private String googleApiKey;
-    @Value("${REQUEST_FIELDMASK}")
-    private String REQUEST_FIELDMASK;
-    @Value("${GET_POLYLINE_DIRECTLY}")
-    private boolean GET_POLYLINE_DIRECTLY;
-
-    @Value("${TMAP_API_KEY}")
-    private String tmapApiKey;
-
     @Value("${WAYPOINT_GENERATOR_NUMBER_OF_RESULTS}")
     private int NUMBER_OF_RESULTS;
-
-    private final WebClient googleWebClient;
-    private final WebClient tmapWebClient;
+    private final Environment env;
+    private final WebClient.Builder webClientBuilder;
     private final WaypointGenerator waypointGenerator;
     private final RouteRepository routeRepository;
     private final RouteRequestProfileRepository routeRequestProfileRepository;
     private final UserRepository userRepository;
 
     @Autowired
-    public RoutesServiceImpl(WebClient.Builder webClientBuilder, WaypointGenerator waypointGenerator, RouteRepository routeRepository, RouteRequestProfileRepository routeRequestProfileRepository, UserRepository userRepository) {
-        this.googleWebClient = webClientBuilder.baseUrl("https://routes.googleapis.com").build();
-        this.tmapWebClient = webClientBuilder.baseUrl("https://apis.openapi.sk.com").build();
+    public RoutesServiceImpl(Environment env, WebClient.Builder webClientBuilder, WaypointGenerator waypointGenerator, RouteRepository routeRepository, RouteRequestProfileRepository routeRequestProfileRepository, UserRepository userRepository) {
+        this.env = env;
+        this.webClientBuilder = webClientBuilder;
         this.waypointGenerator = waypointGenerator;
         this.routeRepository = routeRepository;
         this.routeRequestProfileRepository = routeRequestProfileRepository;
@@ -185,92 +171,35 @@ public class RoutesServiceImpl implements RoutesService {
 
     @Override
     public List<ComputeRoutesResponse> computeRoutes(Long userId) throws IOException {
-
         RouteRequestProfileEntity requestProfileEntity = routeRequestProfileRepository.findByUserId(userId).get();
+        List<LatLng> waypointCandidates = LatLng.deepCopyList(requestProfileEntity.getCreatedWaypointCandidates());
 
         boolean timeOverflow = false;
-        List<LatLng> createdWaypoints = new ArrayList<>(requestProfileEntity.getCreatedWaypointCandidate());
-        if (createdWaypoints.isEmpty()) {
+        if (waypointCandidates.isEmpty()) {
             timeOverflow = true;
-            createdWaypoints.add(requestProfileEntity.getOrigin());
+            waypointCandidates.add(requestProfileEntity.getOrigin());
         }
 
-        List<LatLng> selectedWaypoints = selectWaypoints(createdWaypoints, NUMBER_OF_RESULTS);
-        if (selectedWaypoints.isEmpty()) {
-            throw new RuntimeException("No waypoints available");
-        }
-
-        double originLatitude = requestProfileEntity.getOrigin().getLatitude();
-        double originLongitude = requestProfileEntity.getOrigin().getLongitude();
-        List<RouteEntity> routesList;
-        if ((originLatitude > 33 && originLatitude < 39) && (originLongitude > 124 && originLongitude < 132)) {
-            routesList = computeRoutesUsingTmap(requestProfileEntity, selectedWaypoints, timeOverflow);
-        } else {
-            routesList = computeRoutesUsingGoogle(requestProfileEntity, selectedWaypoints, timeOverflow);
-        }
+        List<LatLng> selectedWaypoints = selectWaypoints(waypointCandidates, NUMBER_OF_RESULTS);
+        RegionalRouteApiService apiService = choiceApiService(requestProfileEntity.getOrigin());
 
         List<ComputeRoutesResponse> result = new ArrayList<>();
-        for (RouteEntity route : routesList) {
+        for (LatLng waypoint : selectedWaypoints) {
+            RouteRequestProfileEntity copiedProfileEntity = new RouteRequestProfileEntity();
+            copiedProfileEntity.setTargetTime(requestProfileEntity.getTargetTime());
+            copiedProfileEntity.setOrigin(requestProfileEntity.getOrigin().clone());
+            copiedProfileEntity.setStartCloseWaypoints(LatLng.deepCopyList(requestProfileEntity.getStartCloseWaypoints()));
+            copiedProfileEntity.setEndCloseWaypoints(LatLng.deepCopyList(requestProfileEntity.getEndCloseWaypoints()));
+            if (!timeOverflow) {
+                copiedProfileEntity.getStartCloseWaypoints().add(waypoint);
+            }
+
+            RouteEntity route = buildRouteFromParsedResponse(waypoint, apiService.getParsedApiResponse(copiedProfileEntity));
+            route.setTotalTimeSeconds(getPersonalRequiredTime(route.getTotalDistanceMeters(), requestProfileEntity.getWalkSpeed()));
             result.add(new ComputeRoutesResponse(route));
         }
 
         result.sort(Comparator.comparingInt(ComputeRoutesResponse::getTotalTimeSeconds));
-        return result;
-    }
-
-    private List<RouteEntity> computeRoutesUsingGoogle(RouteRequestProfileEntity requestProfileEntity, List<LatLng> selectedWaypoints, boolean timeOverflow) throws IOException {
-        List<RouteEntity> result = new ArrayList<>();
-        for (LatLng waypoint : selectedWaypoints) {
-            RouteRequestProfileEntity routeRequestEntity = new RouteRequestProfileEntity();
-            routeRequestEntity.setTargetTime(requestProfileEntity.getTargetTime());
-            routeRequestEntity.setOrigin(requestProfileEntity.getOrigin().clone());
-            routeRequestEntity.setStartCloseWaypoints(LatLng.deepCopyList(requestProfileEntity.getStartCloseWaypoints()));
-            routeRequestEntity.setEndCloseWaypoints(LatLng.deepCopyList(requestProfileEntity.getEndCloseWaypoints()));
-            if (!timeOverflow) {
-                routeRequestEntity.getStartCloseWaypoints().add(waypoint);
-            }
-
-            String requestBody = buildGoogleRequestBody(routeRequestEntity);
-            RouteEntity route;
-            try {
-                if (GET_POLYLINE_DIRECTLY) {
-                    route = getRouteFromResponseDirectly(waypoint, postGoogleAPIRequest(requestBody));
-                }
-                else {
-                    route = getRoute(waypoint, parseGoogleApiResponse(postGoogleAPIRequest(requestBody)));
-                }
-                route.setTotalTimeSeconds(getPersonalRequiredTime(route.getTotalDistanceMeters(), requestProfileEntity.getWalkSpeed()));
-                result.add(route);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        return result;
-    }
-
-    private List<RouteEntity> computeRoutesUsingTmap(RouteRequestProfileEntity requestProfileEntity, List<LatLng> selectedWaypoints, boolean timeOverflow) throws IOException {
-        List<RouteEntity> result = new ArrayList<>();
-        for (LatLng waypoint : selectedWaypoints) {
-            RouteRequestProfileEntity routeRequestEntity = new RouteRequestProfileEntity();
-            routeRequestEntity.setTargetTime(requestProfileEntity.getTargetTime());
-            routeRequestEntity.setOrigin(requestProfileEntity.getOrigin().clone());
-            routeRequestEntity.setStartCloseWaypoints(LatLng.deepCopyList(requestProfileEntity.getStartCloseWaypoints()));
-            routeRequestEntity.setEndCloseWaypoints(LatLng.deepCopyList(requestProfileEntity.getEndCloseWaypoints()));
-            if (!timeOverflow) {
-                routeRequestEntity.getStartCloseWaypoints().add(waypoint);
-            }
-
-            MultiValueMap<String, String> requestBody = buildTmapRequestBody(routeRequestEntity);
-            try {
-                RouteEntity route = getRoute(waypoint, parseTmapApiResponse(postTmapAPIRequest(requestBody)));
-                route.setTotalTimeSeconds(getPersonalRequiredTime(route.getTotalDistanceMeters(), requestProfileEntity.getWalkSpeed()));
-                result.add(route);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
         return result;
     }
 
@@ -297,123 +226,22 @@ public class RoutesServiceImpl implements RoutesService {
 //                }
 //            }
 //        }
+        if (selectedWaypoints.isEmpty()) {
+            throw new RuntimeException("No waypoints available");
+        }
 
         return selectedWaypoints;
     }
 
-    private String buildGoogleRequestBody(RouteRequestProfileEntity routeRequestEntity) {
-        JSONObject json = routeRequestEntity.toGoogleJson();
-        json.put("travelMode", "WALK");
-        json.put("routingPreference", "ROUTING_PREFERENCE_UNSPECIFIED");
-        json.put("computeAlternativeRoutes", false);
-        json.put("languageCode", "en-US");
-        json.put("units", "METRIC");
-        return json.toString();
-    }
-
-    private MultiValueMap<String, String> buildTmapRequestBody(RouteRequestProfileEntity routeRequestEntity) {
-        MultiValueMap<String, String> formData = routeRequestEntity.toTmapValueMap();
-        formData.add("speed", "35");
-        formData.add("startName", "origin");
-        formData.add("endName", "destination");
-        return formData;
-    }
-
-    private String postGoogleAPIRequest(String requestBody) {
-        return googleWebClient.post()
-                .uri("/directions/v2:computeRoutes")
-                .header("Content-Type", "application/json")
-                .header("X-Goog-Api-Key", googleApiKey)
-                .header("X-Goog-FieldMask", REQUEST_FIELDMASK)
-                .body(Mono.just(requestBody), String.class)
-                .retrieve()
-                .bodyToMono(String.class)
-                .block();
-    }
-
-    private String postTmapAPIRequest(MultiValueMap<String, String> requestBody) {
-        return tmapWebClient.post()
-                .uri("/tmap/routes/pedestrian?version=1")
-                .header("Content-Type", "application/x-www-form-urlencoded")
-                .header("appKey", tmapApiKey)
-                .header("Accept-Language", "ko")
-                .bodyValue(requestBody)
-                .retrieve()
-                .bodyToMono(String.class)
-                .block();
-    }
-
-    private ObjectNode parseGoogleApiResponse(String apiResponse) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode rootNode = mapper.readTree(apiResponse);
-
-        JsonNode route = rootNode.path("routes").get(0);
-        double totalDistance = route.path("distanceMeters").asDouble();
-        int totalTime = Integer.parseInt(route.path("duration").asText().replace("s", ""));
-
-        ObjectNode result = mapper.createObjectNode();
-        ArrayNode coordinates = mapper.createArrayNode();
-
-        JsonNode legs = route.path("legs");
-        for (JsonNode leg : legs) {
-            JsonNode steps = leg.path("steps");
-            for (JsonNode step : steps) {
-                JsonNode startLocation = step.path("startLocation").path("latLng");
-                double startLatitude = startLocation.path("latitude").asDouble();
-                double startLongitude = startLocation.path("longitude").asDouble();
-                coordinates.add(mapper.createObjectNode().put("latitude", startLatitude).put("longitude", startLongitude));
-
-                JsonNode endLocation = step.path("endLocation").path("latLng");
-                double endLatitude = endLocation.path("latitude").asDouble();
-                double endLongitude = endLocation.path("longitude").asDouble();
-                coordinates.add(mapper.createObjectNode().put("latitude", endLatitude).put("longitude", endLongitude));
-            }
+    private RegionalRouteApiService choiceApiService(LatLng origin) {
+        if ((origin.getLatitude() > 33 && origin.getLatitude() < 39) && (origin.getLongitude() > 124 && origin.getLongitude() < 132)) {
+            return new TmapApiService(env, webClientBuilder);
+        } else {
+            return new GoogleApiService(env, webClientBuilder);
         }
-
-        result.set("coordinates", coordinates);
-        result.put("totalTimeSeconds", totalTime);
-        result.put("totalDistanceMeters", totalDistance);
-
-        return result;
     }
 
-    private ObjectNode parseTmapApiResponse(String apiResponse) throws JsonProcessingException {
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode rootNode = mapper.readTree(apiResponse);
-
-        JsonNode features = rootNode.path("features");
-        JsonNode properties = features.get(0).path("properties");
-        double totalDistance = properties.path("totalDistance").asDouble();
-        int totalTime = properties.path("totalTime").asInt();
-
-        ObjectNode result = mapper.createObjectNode();
-        ArrayNode coordinatesArray = mapper.createArrayNode();
-
-        for (JsonNode feature : features) {
-            JsonNode geometry = feature.path("geometry");
-            JsonNode coordinates = geometry.path("coordinates");
-
-            if (geometry.path("type").asText().equals("Point")) {
-                double latitude = coordinates.get(1).asDouble();
-                double longitude = coordinates.get(0).asDouble();
-                coordinatesArray.add(mapper.createObjectNode().put("latitude", latitude).put("longitude", longitude));
-            } else if (geometry.path("type").asText().equals("LineString")) {
-                for (JsonNode coordinate : coordinates) {
-                    double latitude = coordinate.get(1).asDouble();
-                    double longitude = coordinate.get(0).asDouble();
-                    coordinatesArray.add(mapper.createObjectNode().put("latitude", latitude).put("longitude", longitude));
-                }
-            }
-        }
-
-        result.set("coordinates", coordinatesArray);
-        result.put("totalTimeSeconds", totalTime);
-        result.put("totalDistanceMeters", totalDistance);
-
-        return result;
-    }
-
-    private RouteEntity getRoute(LatLng createdWaypoint, ObjectNode coordinates) throws IOException {
+    private RouteEntity buildRouteFromParsedResponse(LatLng createdWaypoint, ObjectNode coordinates) throws IOException {
 
         String polyline = new PolylineEncoder().encode(coordinates.path("coordinates"));
         int totalTimeSeconds = coordinates.path("totalTimeSeconds").asInt();
@@ -430,46 +258,7 @@ public class RoutesServiceImpl implements RoutesService {
         return result;
     }
 
-    private RouteEntity getRouteFromResponseDirectly(LatLng createdWaypoint, String apiResponse) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode rootNode = mapper.readTree(apiResponse);
-
-        JsonNode route = rootNode.path("routes").get(0);
-        double totalDistanceMeters = route.path("distanceMeters").asDouble();
-        int totalTimeSeconds = Integer.parseInt(route.path("duration").asText().replace("s", ""));
-        String polyline = route.path("polyline").path("encodedPolyline").asText();
-
-        RouteEntity result = new RouteEntity();
-        result.setCreatedWaypoint(createdWaypoint);
-        result.setPolyLine(polyline);
-        result.setTotalDistanceMeters(totalDistanceMeters);
-        result.setTotalTimeSeconds(totalTimeSeconds);
-        result.setCreatedAt(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-        result.setUpdatedAt(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-
-        return result;
-    }
-
     private int getPersonalRequiredTime(double distance, double walkSpeed) {
         return (int)(distance / (walkSpeed / 3.6));
-    }
-
-    private List<RouteEntity> sortRoutesArrayByTime(List<RouteEntity> routesList) {
-        List<RouteEntity> list = new ArrayList<>(routesList);
-
-        list.sort(Comparator.comparingInt(RouteEntity::getTotalTimeSeconds));
-
-        return list;
-    }
-
-    private void deduplicateRoutes(ArrayNode routesArray) {
-        for (int i = 0; i < routesArray.size() - 1; i++) {
-            JsonNode current = routesArray.get(i);
-            JsonNode next = routesArray.get(i + 1);
-            if (current.get("encodedPolyline").asText().equals(next.get("encodedPolyline").asText())) {
-                routesArray.remove(i + 1);
-                i--;
-            }
-        }
     }
 }

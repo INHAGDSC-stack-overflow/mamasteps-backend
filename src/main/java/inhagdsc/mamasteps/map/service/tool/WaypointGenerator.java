@@ -1,4 +1,4 @@
-package inhagdsc.mamasteps.map.service.tool.waypoint;
+package inhagdsc.mamasteps.map.service.tool;
 
 import inhagdsc.mamasteps.map.domain.LatLng;
 import inhagdsc.mamasteps.map.domain.RouteRequestProfileEntity;
