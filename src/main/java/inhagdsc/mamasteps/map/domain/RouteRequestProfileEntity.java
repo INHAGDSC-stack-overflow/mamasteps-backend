@@ -44,7 +44,7 @@ public class RouteRequestProfileEntity {
 
     @Column(name = "created_waypoint_ candidate", columnDefinition = "json")
     @Convert(converter = LatLngListConverter.class)
-    private List<LatLng> createdWaypointCandidate;
+    private List<LatLng> createdWaypointCandidates;
 
     @Column(name = "distance_factor")
     private double distanceFactor;
