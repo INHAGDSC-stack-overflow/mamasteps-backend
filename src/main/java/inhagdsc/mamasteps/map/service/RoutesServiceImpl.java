@@ -67,9 +67,15 @@ public class RoutesServiceImpl implements RoutesService {
             existingProfile.setStartCloseWaypoints(new ArrayList<>());
             existingProfile.setEndCloseWaypoints(new ArrayList<>());
             existingProfile.setDistanceFactor(1.0);
-            List<LatLng> createdWaypoints = waypointGenerator.getSurroundingWaypoints(existingProfile);
-            existingProfile.setCreatedWaypointCandidates(createdWaypoints);
             existingProfile.setUpdatedAt(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+
+            List<LatLng> createdWaypoints;
+            try {
+                createdWaypoints = waypointGenerator.getSurroundingWaypoints(existingProfile);
+            } catch (IllegalArgumentException e) {
+                createdWaypoints = new ArrayList<>(List.of(existingProfile.getOrigin()));
+            }
+            existingProfile.setCreatedWaypointCandidates(createdWaypoints);
         } else {
             // 새 프로필 생성
             existingProfile = new RouteRequestProfileEntity();
@@ -80,10 +86,16 @@ public class RoutesServiceImpl implements RoutesService {
             existingProfile.setStartCloseWaypoints(new ArrayList<>());
             existingProfile.setEndCloseWaypoints(new ArrayList<>());
             existingProfile.setDistanceFactor(1.0);
-            List<LatLng> createdWaypoints = waypointGenerator.getSurroundingWaypoints(existingProfile);
-            existingProfile.setCreatedWaypointCandidates(createdWaypoints);
             existingProfile.setCreatedAt(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
             existingProfile.setUpdatedAt(existingProfile.getCreatedAt());
+
+            List<LatLng> createdWaypoints;
+            try {
+                createdWaypoints = waypointGenerator.getSurroundingWaypoints(existingProfile);
+            } catch (IllegalArgumentException e) {
+                createdWaypoints = new ArrayList<>(List.of(existingProfile.getOrigin()));
+            }
+            existingProfile.setCreatedWaypointCandidates(createdWaypoints);
         }
 
         routeRequestProfileRepository.save(existingProfile);
@@ -101,9 +113,16 @@ public class RoutesServiceImpl implements RoutesService {
         requestProfileEntity.setWalkSpeed(request.getWalkSpeed());
         requestProfileEntity.setStartCloseWaypoints(request.getStartCloseWaypoints());
         requestProfileEntity.setEndCloseWaypoints(request.getEndCloseWaypoints());
-        List<LatLng> createdWaypoints = waypointGenerator.getSurroundingWaypoints(requestProfileEntity);
-        requestProfileEntity.setCreatedWaypointCandidates(createdWaypoints);
+        requestProfileEntity.setDistanceFactor(1.0);
         requestProfileEntity.setUpdatedAt(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+
+        List<LatLng> createdWaypoints;
+        try {
+            createdWaypoints = waypointGenerator.getSurroundingWaypoints(requestProfileEntity);
+        } catch (IllegalArgumentException e) {
+            createdWaypoints = new ArrayList<>(List.of(requestProfileEntity.getOrigin()));
+        }
+        requestProfileEntity.setCreatedWaypointCandidates(createdWaypoints);
 
         routeRequestProfileRepository.save(requestProfileEntity);
         return new EditRequestProfileResponse(requestProfileEntity);
@@ -202,7 +221,11 @@ public class RoutesServiceImpl implements RoutesService {
                         } else {
                             requestProfileEntity.setDistanceFactor(requestProfileEntity.getDistanceFactor() * 0.9);
                         }
-                        requestProfileEntity.setCreatedWaypointCandidates(waypointGenerator.getSurroundingWaypoints(requestProfileEntity));
+                        try {
+                            requestProfileEntity.setCreatedWaypointCandidates(waypointGenerator.getSurroundingWaypoints(requestProfileEntity));
+                        } catch (IllegalArgumentException e) {
+                            return new ArrayList<>(List.of(new ComputeRoutesResponse(route)));
+                        }
                         continue;
                     }
 

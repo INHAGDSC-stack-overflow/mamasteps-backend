@@ -46,8 +46,8 @@ public class ExploratoryWaypointGenerator implements WaypointGenerator {
         double largerLng = Math.max(previousOfTarget.getLongitude(), nextOfTarget.getLongitude());
 
         double requiredDistance = getRequiredDistance(endCloseIntermediates, startCloseIntermediates, origin, walkSpeed, targetTime, distanceFactor);
-        if (requiredDistance < 0) {
-            return new ArrayList<>(List.of(origin));
+        if (requiredDistance < 0.02) {
+            throw new IllegalArgumentException("The waypoint is too far.");
         }
         double requiredDistanceInLatitude = requiredDistance / 111;
         double requiredDistanceInLongitude = (requiredDistance / 111) / Math.cos(Math.toRadians(previousOfTarget.getLatitude()));
