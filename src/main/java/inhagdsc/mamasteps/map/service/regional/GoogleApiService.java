@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import inhagdsc.mamasteps.map.domain.LatLng;
 import inhagdsc.mamasteps.map.domain.RouteEntity;
 import inhagdsc.mamasteps.map.domain.RouteRequestProfileEntity;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.core.env.Environment;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -35,13 +36,40 @@ public class GoogleApiService implements RegionalRouteApiService{
     }
 
     private String buildRequestBody(RouteRequestProfileEntity routeRequestEntity) {
-        JSONObject json = routeRequestEntity.toGoogleJson();
+        JSONObject json = buildGoogleJson(routeRequestEntity);
         json.put("travelMode", "WALK");
         json.put("routingPreference", "ROUTING_PREFERENCE_UNSPECIFIED");
         json.put("computeAlternativeRoutes", false);
         json.put("languageCode", "en-US");
         json.put("units", "METRIC");
         return json.toString();
+    }
+
+    private JSONObject buildGoogleJson(RouteRequestProfileEntity routeRequestEntity) {
+        JSONObject json = new JSONObject();
+
+        json.put("origin", createLocationJson(routeRequestEntity.getOrigin()));
+        json.put("destination", createLocationJson(routeRequestEntity.getOrigin()));
+
+        JSONArray intermediatesJson = new JSONArray();
+        for (LatLng latLng : routeRequestEntity.getStartCloseWaypoints()) {
+            intermediatesJson.put(createLocationJson(latLng));
+        }
+        for (LatLng latLng : routeRequestEntity.getEndCloseWaypoints()) {
+            intermediatesJson.put(createLocationJson(latLng));
+        }
+        json.put("intermediates", intermediatesJson);
+
+        return json;
+    }
+
+    private JSONObject createLocationJson(LatLng latLng) {
+        JSONObject locationJson = new JSONObject();
+        JSONObject latLngJson = new JSONObject();
+        latLngJson.put("latitude", latLng.getLatitude());
+        latLngJson.put("longitude", latLng.getLongitude());
+        locationJson.put("latLng", latLngJson);
+        return new JSONObject().put("location", locationJson);
     }
 
     private String postApiRequest(RouteRequestProfileEntity routeRequestEntity) {

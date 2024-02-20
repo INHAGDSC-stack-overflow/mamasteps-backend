@@ -4,13 +4,18 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import inhagdsc.mamasteps.map.domain.LatLng;
 import inhagdsc.mamasteps.map.domain.RouteRequestProfileEntity;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
+import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class TmapApiService implements RegionalRouteApiService{
     @Value("${TMAP_API_KEY}")
@@ -29,11 +34,30 @@ public class TmapApiService implements RegionalRouteApiService{
     }
 
     private MultiValueMap<String, String> buildRequestBody(RouteRequestProfileEntity routeRequestEntity) {
-        MultiValueMap<String, String> formData = routeRequestEntity.toTmapValueMap();
+        MultiValueMap<String, String> formData = buildTmapValueMap(routeRequestEntity);
         formData.add("speed", "35");
         formData.add("startName", "origin");
         formData.add("endName", "destination");
         return formData;
+    }
+
+    private MultiValueMap<String, String> buildTmapValueMap(RouteRequestProfileEntity routeRequestEntity) {
+        MultiValueMap<String, String> valueMap = new LinkedMultiValueMap<>();
+        valueMap.add("startX", Double.toString(routeRequestEntity.getOrigin().getLongitude()));
+        valueMap.add("startY", Double.toString(routeRequestEntity.getOrigin().getLatitude()));
+        valueMap.add("endX", Double.toString(routeRequestEntity.getOrigin().getLongitude()));
+        valueMap.add("endY", Double.toString(routeRequestEntity.getOrigin().getLatitude()));
+
+        List<String> passList = new ArrayList<>();
+        for (LatLng latLng : routeRequestEntity.getStartCloseWaypoints()) {
+            passList.add(Double.toString(latLng.getLongitude()) + "," + Double.toString(latLng.getLatitude()));
+        }
+        for (LatLng latLng : routeRequestEntity.getEndCloseWaypoints()) {
+            passList.add(Double.toString(latLng.getLongitude()) + "," + Double.toString(latLng.getLatitude()));
+        }
+        valueMap.add("passList", passList.stream().collect(Collectors.joining("_")));
+
+        return valueMap;
     }
 
     private String postApiRequest(RouteRequestProfileEntity routeRequestEntity) {
