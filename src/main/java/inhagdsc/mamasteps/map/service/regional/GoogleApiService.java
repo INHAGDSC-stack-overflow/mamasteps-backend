@@ -20,13 +20,11 @@ import java.time.format.DateTimeFormatter;
 public class GoogleApiService implements RegionalRouteApiService{
     private String googleApiKey;
     private String REQUEST_FIELDMASK;
-    private boolean GET_POLYLINE_DIRECTLY;
     private final WebClient webClient;
 
     public GoogleApiService(Environment env, WebClient.Builder webClientBuilder) {
         this.googleApiKey = env.getProperty("GOOGLE_API_KEY");
         this.REQUEST_FIELDMASK = env.getProperty("REQUEST_FIELDMASK");
-        this.GET_POLYLINE_DIRECTLY = Boolean.parseBoolean(env.getProperty("GET_POLYLINE_DIRECTLY"));
         this.webClient = webClientBuilder.baseUrl("https://routes.googleapis.com").build();
     }
 
