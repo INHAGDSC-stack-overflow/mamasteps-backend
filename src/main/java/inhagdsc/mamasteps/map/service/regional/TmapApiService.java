@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import inhagdsc.mamasteps.map.domain.LatLng;
 import inhagdsc.mamasteps.map.domain.RouteRequestProfileEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.util.LinkedMultiValueMap;
@@ -22,6 +24,8 @@ public class TmapApiService implements RegionalRouteApiService{
     private String tmapApiKey;
 
     private final WebClient webClient;
+    private static final Logger logger = LoggerFactory.getLogger(GoogleApiService.class);
+    private static long requestCount = 0;
 
     public TmapApiService(Environment env, WebClient.Builder webClientBuilder) {
         this.tmapApiKey = env.getProperty("TMAP_API_KEY");
@@ -62,6 +66,9 @@ public class TmapApiService implements RegionalRouteApiService{
 
     private String postApiRequest(RouteRequestProfileEntity routeRequestEntity) {
         MultiValueMap<String, String> requestBody = buildRequestBody(routeRequestEntity);
+
+        requestCount++;
+        logger.info("TmapApiRequest has been called {} times.", requestCount);
 
         return webClient.post()
                 .uri("/tmap/routes/pedestrian?version=1")
