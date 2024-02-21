@@ -66,9 +66,16 @@ public class RoutesServiceImpl implements RoutesService {
             existingProfile.setTargetTime(user.getTargetTime());
             existingProfile.setStartCloseWaypoints(new ArrayList<>());
             existingProfile.setEndCloseWaypoints(new ArrayList<>());
-            List<LatLng> createdWaypoints = waypointGenerator.getSurroundingWaypoints(existingProfile);
-            existingProfile.setCreatedWaypointCandidate(createdWaypoints);
+            existingProfile.setDistanceFactor(1.0);
             existingProfile.setUpdatedAt(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+
+            List<LatLng> createdWaypoints;
+            try {
+                createdWaypoints = waypointGenerator.getSurroundingWaypoints(existingProfile);
+            } catch (IllegalArgumentException e) {
+                createdWaypoints = new ArrayList<>(List.of(existingProfile.getOrigin()));
+            }
+            existingProfile.setCreatedWaypointCandidates(createdWaypoints);
         } else {
             // 새 프로필 생성
             existingProfile = new RouteRequestProfileEntity();
@@ -78,10 +85,17 @@ public class RoutesServiceImpl implements RoutesService {
             existingProfile.setTargetTime(user.getTargetTime());
             existingProfile.setStartCloseWaypoints(new ArrayList<>());
             existingProfile.setEndCloseWaypoints(new ArrayList<>());
-            List<LatLng> createdWaypoints = waypointGenerator.getSurroundingWaypoints(existingProfile);
-            existingProfile.setCreatedWaypointCandidate(createdWaypoints);
+            existingProfile.setDistanceFactor(1.0);
             existingProfile.setCreatedAt(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
             existingProfile.setUpdatedAt(existingProfile.getCreatedAt());
+
+            List<LatLng> createdWaypoints;
+            try {
+                createdWaypoints = waypointGenerator.getSurroundingWaypoints(existingProfile);
+            } catch (IllegalArgumentException e) {
+                createdWaypoints = new ArrayList<>(List.of(existingProfile.getOrigin()));
+            }
+            existingProfile.setCreatedWaypointCandidates(createdWaypoints);
         }
 
         routeRequestProfileRepository.save(existingProfile);
@@ -99,9 +113,16 @@ public class RoutesServiceImpl implements RoutesService {
         requestProfileEntity.setWalkSpeed(request.getWalkSpeed());
         requestProfileEntity.setStartCloseWaypoints(request.getStartCloseWaypoints());
         requestProfileEntity.setEndCloseWaypoints(request.getEndCloseWaypoints());
-        List<LatLng> createdWaypoints = waypointGenerator.getSurroundingWaypoints(requestProfileEntity);
-        requestProfileEntity.setCreatedWaypointCandidate(createdWaypoints);
+        requestProfileEntity.setDistanceFactor(1.0);
         requestProfileEntity.setUpdatedAt(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+
+        List<LatLng> createdWaypoints;
+        try {
+            createdWaypoints = waypointGenerator.getSurroundingWaypoints(requestProfileEntity);
+        } catch (IllegalArgumentException e) {
+            createdWaypoints = new ArrayList<>(List.of(requestProfileEntity.getOrigin()));
+        }
+        requestProfileEntity.setCreatedWaypointCandidates(createdWaypoints);
 
         routeRequestProfileRepository.save(requestProfileEntity);
         return new EditRequestProfileResponse(requestProfileEntity);
@@ -172,64 +193,73 @@ public class RoutesServiceImpl implements RoutesService {
     @Override
     public List<ComputeRoutesResponse> computeRoutes(Long userId) throws IOException {
         RouteRequestProfileEntity requestProfileEntity = routeRequestProfileRepository.findByUserId(userId).get();
-        List<LatLng> waypointCandidates = LatLng.deepCopyList(requestProfileEntity.getCreatedWaypointCandidates());
-
-        boolean timeOverflow = false;
-        if (waypointCandidates.isEmpty()) {
-            timeOverflow = true;
-            waypointCandidates.add(requestProfileEntity.getOrigin());
-        }
-
-        List<LatLng> selectedWaypoints = selectWaypoints(waypointCandidates, NUMBER_OF_RESULTS);
         RegionalRouteApiService apiService = choiceApiService(requestProfileEntity.getOrigin());
-
         List<ComputeRoutesResponse> result = new ArrayList<>();
-        for (LatLng waypoint : selectedWaypoints) {
-            RouteRequestProfileEntity copiedProfileEntity = new RouteRequestProfileEntity();
-            copiedProfileEntity.setTargetTime(requestProfileEntity.getTargetTime());
-            copiedProfileEntity.setOrigin(requestProfileEntity.getOrigin().clone());
-            copiedProfileEntity.setStartCloseWaypoints(LatLng.deepCopyList(requestProfileEntity.getStartCloseWaypoints()));
-            copiedProfileEntity.setEndCloseWaypoints(LatLng.deepCopyList(requestProfileEntity.getEndCloseWaypoints()));
-            if (!timeOverflow) {
-                copiedProfileEntity.getStartCloseWaypoints().add(waypoint);
-            }
+        try {
+            for (; result.size() < NUMBER_OF_RESULTS; ) {
+                List<LatLng> waypointCandidates = LatLng.deepCopyList(requestProfileEntity.getCreatedWaypointCandidates());
 
-            RouteEntity route = buildRouteFromParsedResponse(waypoint, apiService.getParsedApiResponse(copiedProfileEntity));
-            route.setTotalTimeSeconds(getPersonalRequiredTime(route.getTotalDistanceMeters(), requestProfileEntity.getWalkSpeed()));
-            result.add(new ComputeRoutesResponse(route));
+                if (waypointCandidates.isEmpty()) {
+                    throw new RuntimeException("No waypoints available");
+                }
+
+                List<LatLng> selectedWaypoints = selectWaypoints(waypointCandidates, NUMBER_OF_RESULTS);
+                for (LatLng waypoint : selectedWaypoints) {
+                    RouteRequestProfileEntity copiedProfileEntity = new RouteRequestProfileEntity();
+                    copiedProfileEntity.setTargetTime(requestProfileEntity.getTargetTime());
+                    copiedProfileEntity.setOrigin(requestProfileEntity.getOrigin().clone());
+                    copiedProfileEntity.setStartCloseWaypoints(LatLng.deepCopyList(requestProfileEntity.getStartCloseWaypoints()));
+                    copiedProfileEntity.setEndCloseWaypoints(LatLng.deepCopyList(requestProfileEntity.getEndCloseWaypoints()));
+                    copiedProfileEntity.getStartCloseWaypoints().add(waypoint);
+
+                    RouteEntity route = buildRouteFromParsedResponse(waypoint, apiService.getParsedApiResponse(copiedProfileEntity));
+                    route.setTotalTimeSeconds(getPersonalRequiredTime(route.getTotalDistanceMeters(), requestProfileEntity.getWalkSpeed()));
+
+                    if (calculateDifferenceRatio(requestProfileEntity.getTargetTime(), route.getTotalTimeSeconds()) > 0.1) {
+                        if (requestProfileEntity.getTargetTime() > route.getTotalTimeSeconds()) {
+                            requestProfileEntity.setDistanceFactor(requestProfileEntity.getDistanceFactor() * 1.1);
+                        } else {
+                            requestProfileEntity.setDistanceFactor(requestProfileEntity.getDistanceFactor() * 0.9);
+                        }
+                        try {
+                            requestProfileEntity.setCreatedWaypointCandidates(waypointGenerator.getSurroundingWaypoints(requestProfileEntity));
+                        } catch (IllegalArgumentException e) {
+                            return new ArrayList<>(List.of(new ComputeRoutesResponse(route)));
+                        }
+                        continue;
+                    }
+
+                    requestProfileEntity.getCreatedWaypointCandidates().remove(waypoint);
+                    result.add(new ComputeRoutesResponse(route));
+
+                    if (result.size() >= NUMBER_OF_RESULTS) {
+                        break;
+                    }
+                }
+            }
+        } catch (RuntimeException e) {
+            result.clear();
         }
+
+        routeRequestProfileRepository.save(requestProfileEntity);
 
         result.sort(Comparator.comparingInt(ComputeRoutesResponse::getTotalTimeSeconds));
         return result;
     }
 
+    private double calculateDifferenceRatio(double standard, double value) {
+        return Math.abs(standard - value) / standard;
+    }
+
     private List<LatLng> selectWaypoints(List<LatLng> waypoints, int number) {
-        // 입력 리스트의 크기가 요청한 number보다 작거나 같으면 전체 리스트 반환
         if (waypoints.size() <= number) {
             return new ArrayList<>(waypoints);
         }
 
         List<LatLng> shuffledWaypoints = new ArrayList<>(waypoints);
-        // waypoints 리스트를 무작위로 섞음
         Collections.shuffle(shuffledWaypoints);
 
-        // 섞인 리스트에서 상위 number 개의 요소를 선택
         List<LatLng> selectedWaypoints = new ArrayList<>(shuffledWaypoints.subList(0, number));
-
-        //        if (waypoints.size() <= number) {
-//            selectedWaypoints = waypoints;
-//        }
-//        else {
-//            for (int i = 0; i < waypoints.size(); i++) {
-//                if (i % (waypoints.size() / number) == 0) {
-//                    selectedWaypoints.add(waypoints.get(i));
-//                }
-//            }
-//        }
-        if (selectedWaypoints.isEmpty()) {
-            throw new RuntimeException("No waypoints available");
-        }
-
         return selectedWaypoints;
     }
 
@@ -259,6 +289,6 @@ public class RoutesServiceImpl implements RoutesService {
     }
 
     private int getPersonalRequiredTime(double distance, double walkSpeed) {
-        return (int)(distance / (walkSpeed / 3.6));
+        return (int) (distance / (walkSpeed / 3.6));
     }
 }

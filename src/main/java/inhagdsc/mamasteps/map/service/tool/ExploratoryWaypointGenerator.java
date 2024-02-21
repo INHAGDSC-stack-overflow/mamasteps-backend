@@ -14,8 +14,6 @@ import java.util.List;
 public class ExploratoryWaypointGenerator implements WaypointGenerator {
     @Value("${WAYPOINT_GENERATOR_AREA_DIVISION}")
     private int DIVISION;
-    @Value("${DISTANCE_FACTOR}")
-    private double DISTANCE_FACTOR;
 
     public List<LatLng> getSurroundingWaypoints(RouteRequestProfileEntity requestProfileEntity) {
 
@@ -24,6 +22,7 @@ public class ExploratoryWaypointGenerator implements WaypointGenerator {
         LatLng origin = requestProfileEntity.getOrigin();
         List<LatLng> startCloseIntermediates = requestProfileEntity.getStartCloseWaypoints();
         List<LatLng> endCloseIntermediates = requestProfileEntity.getEndCloseWaypoints();
+        double distanceFactor = requestProfileEntity.getDistanceFactor();
 
         LatLng nextOfTarget;
         if (endCloseIntermediates.isEmpty()) {
@@ -46,7 +45,10 @@ public class ExploratoryWaypointGenerator implements WaypointGenerator {
         double largerLat = Math.max(previousOfTarget.getLatitude(), nextOfTarget.getLatitude());
         double largerLng = Math.max(previousOfTarget.getLongitude(), nextOfTarget.getLongitude());
 
-        double requiredDistance = getRequiredDistance(endCloseIntermediates, startCloseIntermediates, origin, walkSpeed, targetTime);
+        double requiredDistance = getRequiredDistance(endCloseIntermediates, startCloseIntermediates, origin, walkSpeed, targetTime, distanceFactor);
+        if (requiredDistance < 0.02) {
+            throw new IllegalArgumentException("The waypoint is too far.");
+        }
         double requiredDistanceInLatitude = requiredDistance / 111;
         double requiredDistanceInLongitude = (requiredDistance / 111) / Math.cos(Math.toRadians(previousOfTarget.getLatitude()));
 
@@ -99,7 +101,7 @@ public class ExploratoryWaypointGenerator implements WaypointGenerator {
                 );
     }
 
-    private double getRequiredDistance(List<LatLng> endCloseIntermediates, List<LatLng> startCloseIntermediates, LatLng origin, double walkSpeed, int targetTime) {
+    private double getRequiredDistance(List<LatLng> endCloseIntermediates, List<LatLng> startCloseIntermediates, LatLng origin, double walkSpeed, int targetTime, double distanceFactor) {
         List<LatLng> endCloseWaypoints = LatLng.deepCopyList(endCloseIntermediates);
         List<LatLng> startCloseWaypoints = LatLng.deepCopyList(startCloseIntermediates);
         endCloseWaypoints.add(origin);
@@ -107,7 +109,7 @@ public class ExploratoryWaypointGenerator implements WaypointGenerator {
 
         double sumOfTerms = getDistanceBetweenLots(startCloseWaypoints) + getDistanceBetweenLots(endCloseWaypoints);
 
-        return ((walkSpeed * ((double)targetTime / 3600)) - sumOfTerms) * DISTANCE_FACTOR;
+        return ((walkSpeed * ((double)targetTime / 3600)) - sumOfTerms) * distanceFactor;
     }
 
     private double getDistanceBetweenLots(List<LatLng> waypoints) {

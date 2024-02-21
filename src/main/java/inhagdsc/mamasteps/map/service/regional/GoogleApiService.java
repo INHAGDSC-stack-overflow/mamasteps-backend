@@ -7,7 +7,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import inhagdsc.mamasteps.map.domain.LatLng;
 import inhagdsc.mamasteps.map.domain.RouteEntity;
 import inhagdsc.mamasteps.map.domain.RouteRequestProfileEntity;
+import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -19,13 +22,13 @@ import java.time.format.DateTimeFormatter;
 public class GoogleApiService implements RegionalRouteApiService{
     private String googleApiKey;
     private String REQUEST_FIELDMASK;
-    private boolean GET_POLYLINE_DIRECTLY;
     private final WebClient webClient;
+    private static final Logger logger = LoggerFactory.getLogger(GoogleApiService.class);
+    private static long requestCount = 0;
 
     public GoogleApiService(Environment env, WebClient.Builder webClientBuilder) {
         this.googleApiKey = env.getProperty("GOOGLE_API_KEY");
         this.REQUEST_FIELDMASK = env.getProperty("REQUEST_FIELDMASK");
-        this.GET_POLYLINE_DIRECTLY = Boolean.parseBoolean(env.getProperty("GET_POLYLINE_DIRECTLY"));
         this.webClient = webClientBuilder.baseUrl("https://routes.googleapis.com").build();
     }
 
@@ -35,7 +38,7 @@ public class GoogleApiService implements RegionalRouteApiService{
     }
 
     private String buildRequestBody(RouteRequestProfileEntity routeRequestEntity) {
-        JSONObject json = routeRequestEntity.toGoogleJson();
+        JSONObject json = buildGoogleJson(routeRequestEntity);
         json.put("travelMode", "WALK");
         json.put("routingPreference", "ROUTING_PREFERENCE_UNSPECIFIED");
         json.put("computeAlternativeRoutes", false);
@@ -44,8 +47,38 @@ public class GoogleApiService implements RegionalRouteApiService{
         return json.toString();
     }
 
+    private JSONObject buildGoogleJson(RouteRequestProfileEntity routeRequestEntity) {
+        JSONObject json = new JSONObject();
+
+        json.put("origin", createLocationJson(routeRequestEntity.getOrigin()));
+        json.put("destination", createLocationJson(routeRequestEntity.getOrigin()));
+
+        JSONArray intermediatesJson = new JSONArray();
+        for (LatLng latLng : routeRequestEntity.getStartCloseWaypoints()) {
+            intermediatesJson.put(createLocationJson(latLng));
+        }
+        for (LatLng latLng : routeRequestEntity.getEndCloseWaypoints()) {
+            intermediatesJson.put(createLocationJson(latLng));
+        }
+        json.put("intermediates", intermediatesJson);
+
+        return json;
+    }
+
+    private JSONObject createLocationJson(LatLng latLng) {
+        JSONObject locationJson = new JSONObject();
+        JSONObject latLngJson = new JSONObject();
+        latLngJson.put("latitude", latLng.getLatitude());
+        latLngJson.put("longitude", latLng.getLongitude());
+        locationJson.put("latLng", latLngJson);
+        return new JSONObject().put("location", locationJson);
+    }
+
     private String postApiRequest(RouteRequestProfileEntity routeRequestEntity) {
         String requestBody = buildRequestBody(routeRequestEntity);
+
+        requestCount++;
+        logger.info("GoogleApiRequest has been called {} times.", requestCount);
 
         return webClient.post()
                 .uri("/directions/v2:computeRoutes")
