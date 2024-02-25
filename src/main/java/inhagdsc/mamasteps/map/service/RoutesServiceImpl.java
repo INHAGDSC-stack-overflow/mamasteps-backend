@@ -39,15 +39,17 @@ public class RoutesServiceImpl implements RoutesService {
     private final RouteRepository routeRepository;
     private final RouteRequestProfileRepository routeRequestProfileRepository;
     private final UserRepository userRepository;
+    private final PolylineEncoder polylineEncoder;
 
     @Autowired
-    public RoutesServiceImpl(Environment env, WebClient.Builder webClientBuilder, WaypointGenerator waypointGenerator, RouteRepository routeRepository, RouteRequestProfileRepository routeRequestProfileRepository, UserRepository userRepository) {
+    public RoutesServiceImpl(Environment env, WebClient.Builder webClientBuilder, WaypointGenerator waypointGenerator, RouteRepository routeRepository, RouteRequestProfileRepository routeRequestProfileRepository, UserRepository userRepository, PolylineEncoder polylineEncoder) {
         this.env = env;
         this.webClientBuilder = webClientBuilder;
         this.waypointGenerator = waypointGenerator;
         this.routeRepository = routeRepository;
         this.routeRequestProfileRepository = routeRequestProfileRepository;
         this.userRepository = userRepository;
+        this.polylineEncoder = polylineEncoder;
     }
 
     @Override
@@ -273,7 +275,7 @@ public class RoutesServiceImpl implements RoutesService {
 
     private RouteEntity buildRouteFromParsedResponse(LatLng createdWaypoint, ObjectNode coordinates) throws IOException {
 
-        String polyline = new PolylineEncoder().encode(coordinates.path("coordinates"));
+        String polyline = polylineEncoder.encode(coordinates.path("coordinates"));
         int totalTimeSeconds = coordinates.path("totalTimeSeconds").asInt();
         double totalDistanceMeters = coordinates.path("totalDistanceMeters").asDouble();
 
