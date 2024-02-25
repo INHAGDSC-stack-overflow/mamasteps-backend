@@ -2,11 +2,13 @@ package inhagdsc.mamasteps.map.service.tool;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import inhagdsc.mamasteps.map.domain.LatLng;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+@Component
 public class PolylineEncoder {
     public String encode(JsonNode coordinates) throws IOException {
         List<LatLng> path = parseJsonToLatLngList(coordinates);
