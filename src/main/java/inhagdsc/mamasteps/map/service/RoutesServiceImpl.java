@@ -228,18 +228,23 @@ public class RoutesServiceImpl implements RoutesService {
                     RouteEntity route = buildRouteFromParsedResponse(waypoint, apiService.getParsedApiResponse(copiedProfileEntity));
                     route.setTotalTimeSeconds(getPersonalRequiredTime(route.getTotalDistanceMeters(), requestProfileEntity.getWalkSpeed()));
 
-                    if (calculateDifferenceRatio(requestProfileEntity.getTargetTime(), route.getTotalTimeSeconds()) > 0.1) {
+                    double differenceRatio = calculateDifferenceRatio(requestProfileEntity.getTargetTime(), route.getTotalTimeSeconds());
+                    if (differenceRatio > 0.1) {
+                        LatLng pulledWaypoint;
                         if (requestProfileEntity.getTargetTime() > route.getTotalTimeSeconds()) {
-                            requestProfileEntity.setDistanceFactor(requestProfileEntity.getDistanceFactor() * 1.1);
+                            pulledWaypoint = pullWaypointToTarget(waypoint, requestProfileEntity.getOrigin(), differenceRatio + 1);
                         } else {
-                            requestProfileEntity.setDistanceFactor(requestProfileEntity.getDistanceFactor() * 0.9);
+                            pulledWaypoint = pullWaypointToTarget(waypoint, requestProfileEntity.getOrigin(), 1 / (differenceRatio + 1));
                         }
-                        try {
-                            requestProfileEntity.setCreatedWaypointCandidates(waypointGenerator.getSurroundingWaypoints(requestProfileEntity));
-                        } catch (IllegalArgumentException e) {
-                            return new ArrayList<>(List.of(new ComputeRoutesResponse(route)));
+                        copiedProfileEntity.getStartCloseWaypoints().remove(copiedProfileEntity.getStartCloseWaypoints().size() - 1);
+                        copiedProfileEntity.getStartCloseWaypoints().add(pulledWaypoint);
+                        route = buildRouteFromParsedResponse(pulledWaypoint, apiService.getParsedApiResponse(copiedProfileEntity));
+                        route.setTotalTimeSeconds(getPersonalRequiredTime(route.getTotalDistanceMeters(), requestProfileEntity.getWalkSpeed()));
+                        if (calculateDifferenceRatio(requestProfileEntity.getTargetTime(), route.getTotalTimeSeconds()) > 0.1) {
+                            // try pull only once
+                            requestProfileEntity.getCreatedWaypointCandidates().remove(waypoint);
+                            continue;
                         }
-                        continue;
                     }
 
                     requestProfileEntity.getCreatedWaypointCandidates().remove(waypoint);
@@ -291,6 +296,12 @@ public class RoutesServiceImpl implements RoutesService {
         double averageTimeOfSamples = (double) sumOfTimeOfSamples / samples.size();
 
         profile.setDistanceFactor(profile.getDistanceFactor() * (profile.getTargetTime() / averageTimeOfSamples));
+    }
+
+    private LatLng pullWaypointToTarget(LatLng waypoint, LatLng origin, double ratio) {
+        double latitude = origin.getLatitude() + (waypoint.getLatitude() - origin.getLatitude()) * ratio;
+        double longitude = origin.getLongitude() + (waypoint.getLongitude() - origin.getLongitude()) * ratio;
+        return new LatLng(latitude, longitude);
     }
 
     private double calculateDifferenceRatio(double standard, double value) {
