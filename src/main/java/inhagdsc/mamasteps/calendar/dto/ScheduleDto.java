@@ -16,7 +16,6 @@ public class ScheduleDto {
     public ScheduleEntity toEntity() {
         ScheduleEntity scheduleEntity = new ScheduleEntity();
         scheduleEntity.setId(id);
-        scheduleEntity.setRouteId(routeId);
         scheduleEntity.setStartAt(date);
         scheduleEntity.setTargetTimeSeconds(targetTimeSeconds);
         scheduleEntity.setCreatedAt(createdAt);

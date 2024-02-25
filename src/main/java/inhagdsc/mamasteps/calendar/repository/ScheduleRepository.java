@@ -11,6 +11,6 @@ import java.util.List;
 public interface ScheduleRepository extends JpaRepository<ScheduleEntity, Long> {
     public List<ScheduleEntity> findAllByUserId(Long userId);
 
-    @Query("SELECT COUNT(s) > 0 FROM ScheduleEntity s WHERE s.userId = :userId AND s.startAt = :startAt")
-    boolean existsByUserIdAndStartAt(Long userId, LocalDateTime startAt);
+    @Query("SELECT COUNT(s) > 0 FROM ScheduleEntity s WHERE s.user = :user AND s.startAt = :startAt")
+    boolean existsByUserAndStartAt(User user, LocalDateTime startAt);
 }

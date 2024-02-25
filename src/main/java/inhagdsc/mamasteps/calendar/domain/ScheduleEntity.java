@@ -1,11 +1,14 @@
 package inhagdsc.mamasteps.calendar.domain;
 
 import inhagdsc.mamasteps.calendar.dto.ScheduleDto;
+import inhagdsc.mamasteps.map.domain.RouteEntity;
+import inhagdsc.mamasteps.user.entity.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Entity
 @Getter
@@ -18,11 +21,13 @@ public class ScheduleEntity {
     @Column(name = "schedule_id", nullable = false)
     private Long id;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
-    @Column(name = "route_id", nullable = true)
-    private Long routeId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "route_id", nullable = true)
+    private RouteEntity route;
 
     @Column(name = "start-at")
     private LocalDateTime startAt;
@@ -42,7 +47,11 @@ public class ScheduleEntity {
     public ScheduleDto toDto() {
         ScheduleDto dto = new ScheduleDto();
         dto.setId(this.getId());
-        dto.setRouteId(this.getRouteId());
+        Optional.ofNullable(this.getRoute())
+                .map(RouteEntity::getId)
+                .ifPresent(routeId -> {
+                    dto.setRouteId(this.getRoute().getId());
+                });
         dto.setDate(this.getStartAt());
         dto.setTargetTimeSeconds(this.getTargetTimeSeconds());
         dto.setCreatedAt(this.getCreatedAt());
@@ -51,7 +60,7 @@ public class ScheduleEntity {
     }
 
     public void update(ScheduleEntity scheduleEntity) {
-        this.routeId = scheduleEntity.getRouteId();
+        this.route = scheduleEntity.getRoute();
         this.startAt = scheduleEntity.getStartAt();
         this.updatedAt = scheduleEntity.getUpdatedAt();
     }
