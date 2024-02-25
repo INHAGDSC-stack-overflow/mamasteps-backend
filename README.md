@@ -7,7 +7,6 @@ Project to participate in 2024 google solution challenge
 # Backend-member
 |Jaegyeong Han|Sungkyu Shin|Gyuhyeok Hwang|
 |:-:|:-:|:-:|
-|-lead, backend|-backend|-backend|
 |<img alt="h" src="https://github.com/INHAGDSC-stack-overflow/.github/assets/126947828/9ad665a6-dc05-481f-9f70-04d8a6d8b33c" width="100px">|<img width="100" alt="s" src="https://github.com/INHAGDSC-stack-overflow/.github/assets/126947828/8b886570-a9df-4323-a203-b29bdd55673f">|<img src="https://github.com/umc-hackathon-Y/Y-Server/assets/113760409/22148297-a7db-4abd-86cf-952e35e1be61" width="100px" />|
 |[@hanjaegyeong](https://github.com/hanjaegyeong)|[@kyu4583](https://github.com/kyu4583)|[@Gyuhyeok99](https://github.com/Gyuhyeok99)|
 
