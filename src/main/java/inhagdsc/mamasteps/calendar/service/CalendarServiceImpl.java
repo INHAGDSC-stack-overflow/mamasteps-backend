@@ -6,6 +6,8 @@ import inhagdsc.mamasteps.calendar.dto.RecordDto;
 import inhagdsc.mamasteps.calendar.dto.ScheduleDto;
 import inhagdsc.mamasteps.calendar.repository.RecordRepository;
 import inhagdsc.mamasteps.calendar.repository.ScheduleRepository;
+import inhagdsc.mamasteps.map.domain.RouteEntity;
+import inhagdsc.mamasteps.map.repository.RouteRepository;
 import inhagdsc.mamasteps.user.entity.User;
 import inhagdsc.mamasteps.user.entity.WalkPreference;
 import inhagdsc.mamasteps.user.repository.UserRepository;
@@ -13,12 +15,14 @@ import inhagdsc.mamasteps.user.service.WorkoutOptimizeService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.lang.reflect.InvocationTargetException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class CalendarServiceImpl implements CalendarService {
@@ -26,12 +30,14 @@ public class CalendarServiceImpl implements CalendarService {
     private final ScheduleRepository scheduleRepository;
     private final RecordRepository recordRepository;
     private final WorkoutOptimizeService workoutOptimizeService;
+    private final RouteRepository routeRepository;
     private final UserRepository userRepository;
 
-    public CalendarServiceImpl(ScheduleRepository scheduleRepository, RecordRepository recordRepository, WorkoutOptimizeService workoutOptimizeService, UserRepository userRepository) {
+    public CalendarServiceImpl(ScheduleRepository scheduleRepository, RecordRepository recordRepository, WorkoutOptimizeService workoutOptimizeService, RouteRepository routeRepository, UserRepository userRepository) {
         this.scheduleRepository = scheduleRepository;
         this.recordRepository = recordRepository;
         this.workoutOptimizeService = workoutOptimizeService;
+        this.routeRepository = routeRepository;
         this.userRepository = userRepository;
     }
 
@@ -41,7 +47,13 @@ public class CalendarServiceImpl implements CalendarService {
     }
 
     @Override
-    public void addSchedule(ScheduleEntity scheduleEntity) {
+    public void addSchedule(User user, ScheduleDto scheduleDto) {
+        ScheduleEntity scheduleEntity = scheduleDto.toEntity();
+        scheduleEntity.setUser(user);
+        Optional.ofNullable(scheduleDto.getRouteId())
+                .ifPresent(routeId -> {
+                    scheduleEntity.setRoute(routeRepository.findById(scheduleDto.getRouteId()).get());
+                });
         scheduleRepository.save(scheduleEntity);
     }
 
@@ -58,32 +70,34 @@ public class CalendarServiceImpl implements CalendarService {
     @Override
     public void editSchedule(Long scheduleId, ScheduleEntity scheduleEntity) {
         scheduleRepository.findById(scheduleId).ifPresent(targetScheduleEntity -> {
-            if(targetScheduleEntity.getUserId().equals(scheduleEntity.getUserId())) {
+            if(targetScheduleEntity.getUser().getId().equals(scheduleEntity.getUser().getId())) {
                 targetScheduleEntity.update(scheduleEntity);
                 scheduleRepository.save(targetScheduleEntity);
             }
             else {
-                throw new IllegalArgumentException("Schedule with ID:" + scheduleId + "not found for User ID:" + scheduleEntity.getUserId());
+                throw new IllegalArgumentException("Schedule with ID:" + scheduleId + "not found for User ID:" + scheduleEntity.getUser());
             }
         });
     }
 
     @Override
     @Transactional
-    public void deleteSchedule(Long userId, Long scheduleId) {
+    public void deleteSchedule(User user, Long scheduleId) {
         scheduleRepository.findById(scheduleId).ifPresent(scheduleEntity -> {
-            if(scheduleEntity.getUserId().equals(userId)) {
+            if (scheduleEntity.getUser().getId().equals(user.getId())) {
                 scheduleRepository.delete(scheduleEntity);
-            }
-            else {
-                throw new IllegalArgumentException("Schedule with ID:" + scheduleId + "not found for User ID:" + userId);
             }
         });
     }
 
     @Override
-    public void addRecord(RecordEntity recordEntity) {
-        User user = userRepository.findById(recordEntity.getUserId()).orElseThrow(() -> new IllegalArgumentException("User not found"));
+    public void addRecord(User user, RecordDto recordDto) {
+        RecordEntity recordEntity = recordDto.toEntity();
+        recordEntity.setUser(user);
+        Optional.ofNullable(recordDto.getRouteId())
+                .ifPresent(routeId -> {
+                    recordEntity.setRoute(routeRepository.findById(recordDto.getRouteId()).get());
+                });
         recordRepository.save(recordEntity);
         user.setWalkCount(user.getWalkCount() + 1);
         if (user.getWalkCount() % 5 == 0) {
@@ -104,25 +118,22 @@ public class CalendarServiceImpl implements CalendarService {
     @Override
     public void editRecord(Long recordId, RecordEntity recordEntity) {
         recordRepository.findById(recordId).ifPresent(targetRecordEntity -> {
-            if(targetRecordEntity.getUserId().equals(recordEntity.getUserId())) {
+            if(targetRecordEntity.getUser().getId().equals(recordEntity.getUser().getId())) {
                 targetRecordEntity.update(recordEntity);
                 recordRepository.save(targetRecordEntity);
             }
             else {
-                throw new IllegalArgumentException("Record with ID:" + recordId + "not found for User ID:" + recordEntity.getUserId());
+                throw new IllegalArgumentException("Record with ID:" + recordId + "not found for User ID:" + recordEntity.getUser());
             }
         });
     }
 
     @Override
     @Transactional
-    public void deleteRecord(Long userId, Long recordId) {
+    public void deleteRecord(User user, Long recordId) {
         recordRepository.findById(recordId).ifPresent(recordEntity -> {
-            if(recordEntity.getUserId().equals(userId)) {
+            if(recordEntity.getUser().getId().equals(user.getId())) {
                 recordRepository.delete(recordEntity);
-            }
-            else {
-                throw new IllegalArgumentException("Record with ID:" + recordId + "not found for User ID:" + userId);
             }
         });
     }
@@ -139,10 +150,10 @@ public class CalendarServiceImpl implements CalendarService {
                 LocalDate startDate = now.plusDays(calculateDayOfWeekDistance(preference.getDayOfWeek(), dayOfWeek) + 1);
                 LocalTime startTime = preference.getStartTime();
                 LocalDateTime startAt = LocalDateTime.of(startDate, startTime);
-                if (scheduleRepository.existsByUserIdAndStartAt(user.getId(), startAt)) {
+                if (scheduleRepository.existsByUserAndStartAt(user, startAt)) {
                     continue;
                 }
-                scheduleEntity.setUserId(user.getId());
+                scheduleEntity.setUser(user);
                 scheduleEntity.setStartAt(startAt);
                 scheduleEntity.setTargetTimeSeconds(recommendedWalkTimeSeconds);
                 scheduleEntity.setAutoGenerated(true);

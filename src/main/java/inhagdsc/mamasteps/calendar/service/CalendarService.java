@@ -12,21 +12,21 @@ import java.util.List;
 public interface CalendarService {
     LocalDateTime getNow();
 
-    void addSchedule(ScheduleEntity scheduleEntity);
+    void addSchedule(User user, ScheduleDto scheduleDto);
 
     List<ScheduleDto> getSchedules(Long userId);
 
     void editSchedule(Long scheduleId, ScheduleEntity scheduleEntity);
 
-    void deleteSchedule(Long userId, Long scheduleId);
+    void deleteSchedule(User user, Long scheduleId);
 
-    void addRecord(RecordEntity recordEntity);
+    void addRecord(User user, RecordDto recordDto);
 
     List<RecordDto> getRecords(Long userId);
 
     void editRecord(Long recordId, RecordEntity recordEntity);
 
-    void deleteRecord(Long userId, Long recordId);
+    void deleteRecord(User user, Long recordId);
 
     void createAutoSchedule(User user);
 }

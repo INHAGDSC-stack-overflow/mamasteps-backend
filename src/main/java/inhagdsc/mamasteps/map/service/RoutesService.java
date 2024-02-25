@@ -17,7 +17,7 @@ public interface RoutesService {
     public EditRequestProfileResponse editRequestProfile(Long userId, EditRequestProfileRequest routesProfileDto);
     public GetRequestProfileResponse getRequestProfile(Long userId);
     public List<ComputeRoutesResponse> computeRoutes(Long userId) throws IOException;
-    void saveRoute(Long userId, SaveRouteRequest routeDto);
+    void saveRoute(User user, SaveRouteRequest routeDto);
     List<GetRoutesResponse> getRoutes(Long userId);
     void deleteRoute(Long userId, Long routeId);
     void editRouteName(Long userId, Long routeId, String name);

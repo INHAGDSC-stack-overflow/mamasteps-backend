@@ -152,11 +152,11 @@ public class RoutesServiceImpl implements RoutesService {
 
     @Override
     @Transactional
-    public void saveRoute(Long userId, SaveRouteRequest request) {
+    public void saveRoute(User user, SaveRouteRequest request) {
         RouteEntity routeEntity = new RouteEntity();
-        int routeCount = routeRepository.countByUserId(userId);
+        int routeCount = routeRepository.countByUserId(user.getId());
         routeEntity.setRouteName("내 산책 경로 " + (routeCount + 1));
-        routeEntity.setUserId(userId);
+        routeEntity.setUser(user);
         routeEntity.setPolyLine(request.getPolyLine());
         routeEntity.setTotalDistanceMeters(request.getTotalDistanceMeters());
         routeEntity.setTotalTimeSeconds(request.getTotalTimeSeconds());

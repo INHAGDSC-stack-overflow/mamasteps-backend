@@ -62,7 +62,7 @@ public class RoutesController {
     @PostMapping("/saveRoute")
     public ApiResponse<Void> saveRoute(@AuthenticationPrincipal User user, @RequestBody SaveRouteRequest routeDto) {
         try {
-            routesService.saveRoute(user.getId(), routeDto);
+            routesService.saveRoute(user, routeDto);
             return ApiResponse.onSuccess(OK, null);
         } catch (Exception e) {
             return ApiResponse.onFailure(FORBIDDEN.getCode(), e.getMessage(), null);

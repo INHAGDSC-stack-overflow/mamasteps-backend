@@ -33,9 +33,7 @@ public class CalendarController {
 
     @PostMapping("/addSchedule")
     public ApiResponse<Void> addSchedule(@AuthenticationPrincipal User user, @RequestBody ScheduleDto scheduleDto) {
-        ScheduleEntity scheduleEntity = scheduleDto.toEntity();
-        scheduleEntity.setUserId(user.getId());
-        calendarService.addSchedule(scheduleEntity);
+        calendarService.addSchedule(user, scheduleDto);
         return ApiResponse.onSuccess(OK, null);
     }
 
@@ -48,7 +46,7 @@ public class CalendarController {
     @PostMapping("/editSchedule/{scheduleId}")
     public ApiResponse<Void> editSchedule(@AuthenticationPrincipal User user, @PathVariable Long scheduleId, @RequestBody ScheduleDto scheduleDto) {
         ScheduleEntity scheduleEntity = scheduleDto.toEntity();
-        scheduleEntity.setUserId(user.getId());
+        scheduleEntity.setUser(user);
         try {
             calendarService.editSchedule(scheduleId, scheduleEntity);
             return ApiResponse.onSuccess(OK, null);
@@ -60,7 +58,7 @@ public class CalendarController {
     @DeleteMapping("/deleteSchedule/{scheduleId}")
     public ApiResponse<Void> deleteSchedule(@AuthenticationPrincipal User user, @PathVariable Long scheduleId) {
         try {
-            calendarService.deleteSchedule(user.getId(), scheduleId);
+            calendarService.deleteSchedule(user, scheduleId);
             return ApiResponse.onSuccess(OK, null);
         } catch (Exception e) {
             return ApiResponse.onFailure(FORBIDDEN.getCode(), e.getMessage(), null);
@@ -69,9 +67,7 @@ public class CalendarController {
 
     @PostMapping("/addRecord")
     public ApiResponse<Void> addRecord(@AuthenticationPrincipal User user, @RequestBody RecordDto recordDto) {
-        RecordEntity recordEntity = recordDto.toEntity();
-        recordEntity.setUserId(user.getId());
-        calendarService.addRecord(recordEntity);
+        calendarService.addRecord(user, recordDto);
         return ApiResponse.onSuccess(OK, null);
     }
 
@@ -84,7 +80,7 @@ public class CalendarController {
     @PostMapping("/editRecord/{recordId}")
     public ApiResponse<Void> editSchedule(@AuthenticationPrincipal User user, @PathVariable Long recordId, @RequestBody RecordDto recordDto) {
         RecordEntity recordEntity = recordDto.toEntity();
-        recordEntity.setUserId(user.getId());
+        recordEntity.setUser(user);
         try {
             calendarService.editRecord(recordId, recordEntity);
             return ApiResponse.onSuccess(OK, null);
@@ -96,7 +92,7 @@ public class CalendarController {
     @DeleteMapping("/deleteRecord/{recordId}")
     public ApiResponse<Void> deleteRecord(@AuthenticationPrincipal User user, @PathVariable Long recordId) {
         try {
-            calendarService.deleteSchedule(user.getId(), recordId);
+            calendarService.deleteRecord(user, recordId);
             return ApiResponse.onSuccess(OK, null);
         } catch (Exception e) {
             return ApiResponse.onFailure(FORBIDDEN.getCode(), e.getMessage(), null);

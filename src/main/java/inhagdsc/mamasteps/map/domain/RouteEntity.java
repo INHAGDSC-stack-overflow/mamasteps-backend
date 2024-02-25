@@ -1,9 +1,14 @@
 package inhagdsc.mamasteps.map.domain;
 
 import inhagdsc.mamasteps.map.domain.converter.LatLngConverter;
+import inhagdsc.mamasteps.user.entity.User;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
+@Getter
+@Setter
 @Table(name = "routes")
 public class RouteEntity {
 
@@ -12,8 +17,9 @@ public class RouteEntity {
     @Column(name = "id", nullable = false)
     private Long id;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @Column(name = "route_name")
     private String routeName;
@@ -45,100 +51,4 @@ public class RouteEntity {
 
     @Column(name = "updated_at", columnDefinition = "timestamp")
     private String updatedAt;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public LatLng getCreatedWaypoint() {
-        return createdWaypoint;
-    }
-
-    public void setCreatedWaypoint(LatLng createdWaypoint) {
-        this.createdWaypoint = createdWaypoint;
-    }
-
-    public String getPolyLine() {
-        return polyLine;
-    }
-
-    public void setPolyLine(String polyLine) {
-        this.polyLine = polyLine;
-    }
-
-    public Double getTotalDistanceMeters() {
-        return totalDistanceMeters;
-    }
-
-    public void setTotalDistanceMeters(Double totalDistanceMeters) {
-        this.totalDistanceMeters = totalDistanceMeters;
-    }
-
-    public Integer getTotalTimeSeconds() {
-        return totalTimeSeconds;
-    }
-
-    public void setTotalTimeSeconds(Integer totalTimeSeconds) {
-        this.totalTimeSeconds = totalTimeSeconds;
-    }
-
-    public double getWalkSpeed() {
-        return walkSpeed;
-    }
-
-    public void setWalkSpeed(double walkSpeed) {
-        this.walkSpeed = walkSpeed;
-    }
-
-    public String getUsedAt() {
-        return usedAt;
-    }
-
-    public void setUsedAt(String usedAt) {
-        this.usedAt = usedAt;
-    }
-
-    public int getEvaluatedHardness() {
-        return evaluatedHardness;
-    }
-
-    public void setEvaluatedHardness(int evaluatedHardness) {
-        this.evaluatedHardness = evaluatedHardness;
-    }
-
-    public String getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(String createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public String getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(String updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-
-    public String getRouteName() {
-        return routeName;
-    }
-
-    public void setRouteName(String routeName) {
-        this.routeName = routeName;
-    }
 }
