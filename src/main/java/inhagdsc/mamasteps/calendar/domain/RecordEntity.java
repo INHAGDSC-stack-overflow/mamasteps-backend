@@ -4,11 +4,15 @@ import inhagdsc.mamasteps.calendar.dto.RecordDto;
 import inhagdsc.mamasteps.map.domain.RouteEntity;
 import inhagdsc.mamasteps.user.entity.User;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Entity
+@Getter
+@Setter
 @Table(name = "records")
 public class RecordEntity {
 
@@ -57,61 +61,5 @@ public class RecordEntity {
         this.startAt = recordEntity.getStartAt();
         this.completedTimeSeconds = recordEntity.getCompletedTimeSeconds();
         this.updatedAt = recordEntity.getUpdatedAt();
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User userId) {
-        this.user = userId;
-    }
-
-    public LocalDateTime getStartAt() {
-        return startAt;
-    }
-
-    public void setStartAt(LocalDateTime date) {
-        this.startAt = date;
-    }
-
-    public String getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(String createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public String getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(String updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public RouteEntity getRoute() {
-        return route;
-    }
-
-    public void setRoute(RouteEntity routeId) {
-        this.route = routeId;
-    }
-
-    public int getCompletedTimeSeconds() {
-        return completedTimeSeconds;
-    }
-
-    public void setCompletedTimeSeconds(int completedTimeSeconds) {
-        this.completedTimeSeconds = completedTimeSeconds;
     }
 }
