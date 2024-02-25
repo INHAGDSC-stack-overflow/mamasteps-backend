@@ -1,6 +1,26 @@
 spring:
   config:
     activate:
+      on-profile: prod
+  datasource:
+    url: ${PROD_DB_URL}
+    username: ${PROD_DB_USERNAME}
+    password: ${PROD_DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
+
+swagger:
+  server-url: https://dev.mamasteps.dev
+---
+spring:
+  config:
+    activate:
       on-profile: dev
   datasource:
     url: ${DEV_DB_URL}
