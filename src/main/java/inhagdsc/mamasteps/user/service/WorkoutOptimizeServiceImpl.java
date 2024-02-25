@@ -14,6 +14,8 @@ public class WorkoutOptimizeServiceImpl implements WorkoutOptimizeService {
     private final int FEEDBACK_RADIUS = 9;
     private final int MAX_TARGETTIME = 3600;
     private final int MIN_TARGETTIME = 300;
+    private final double MAX_WALKSPEED = 10.0;
+    private final double MIN_WALKSPEED = 1.0;
 
     private final UserRepository userRepository;
 
@@ -50,7 +52,16 @@ public class WorkoutOptimizeServiceImpl implements WorkoutOptimizeService {
     @Override
     public void optimizeSpeed(User user, OptimizeSpeedRequest request) {
         double currentSpeed = calculateWalkSpeed(request.getDistanceMeters(), request.getCompleteTimeSeconds());
-        user.setWalkSpeed((currentSpeed + user.getWalkSpeed()) / 2);
+        double optimizedSpeed = (currentSpeed + user.getWalkSpeed()) / 2;
+        if (optimizedSpeed > MAX_WALKSPEED) {
+            user.setWalkSpeed(MAX_WALKSPEED);
+        }
+        else if (optimizedSpeed < MIN_WALKSPEED) {
+            user.setWalkSpeed(MIN_WALKSPEED);
+        }
+        else {
+            user.setWalkSpeed(optimizedSpeed);
+        }
         userRepository.save(user);
     }
 
