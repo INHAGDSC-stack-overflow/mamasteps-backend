@@ -33,6 +33,8 @@ import java.util.*;
 public class RoutesServiceImpl implements RoutesService {
     @Value("${WAYPOINT_GENERATOR_NUMBER_OF_RESULTS}")
     private int NUMBER_OF_RESULTS;
+    @Value("${DISTANCE_FACTOR_OPTIMIZE-NUMBER_OF_SAMPLES}")
+    private int NUMBER_OF_SAMPLES;
     private final Environment env;
     private final WebClient.Builder webClientBuilder;
     private final WaypointGenerator waypointGenerator;
@@ -74,6 +76,9 @@ public class RoutesServiceImpl implements RoutesService {
             List<LatLng> createdWaypoints;
             try {
                 createdWaypoints = waypointGenerator.getSurroundingWaypoints(existingProfile);
+                existingProfile.setCreatedWaypointCandidates(createdWaypoints);
+                optimizeDistanceFactor(existingProfile, NUMBER_OF_SAMPLES);
+                createdWaypoints = waypointGenerator.getSurroundingWaypoints(existingProfile);
             } catch (IllegalArgumentException e) {
                 createdWaypoints = new ArrayList<>(List.of(existingProfile.getOrigin()));
             }
@@ -93,6 +98,9 @@ public class RoutesServiceImpl implements RoutesService {
 
             List<LatLng> createdWaypoints;
             try {
+                createdWaypoints = waypointGenerator.getSurroundingWaypoints(existingProfile);
+                existingProfile.setCreatedWaypointCandidates(createdWaypoints);
+                optimizeDistanceFactor(existingProfile, NUMBER_OF_SAMPLES);
                 createdWaypoints = waypointGenerator.getSurroundingWaypoints(existingProfile);
             } catch (IllegalArgumentException e) {
                 createdWaypoints = new ArrayList<>(List.of(existingProfile.getOrigin()));
@@ -120,6 +128,9 @@ public class RoutesServiceImpl implements RoutesService {
 
         List<LatLng> createdWaypoints;
         try {
+            createdWaypoints = waypointGenerator.getSurroundingWaypoints(requestProfileEntity);
+            requestProfileEntity.setCreatedWaypointCandidates(createdWaypoints);
+            optimizeDistanceFactor(requestProfileEntity, NUMBER_OF_SAMPLES);
             createdWaypoints = waypointGenerator.getSurroundingWaypoints(requestProfileEntity);
         } catch (IllegalArgumentException e) {
             createdWaypoints = new ArrayList<>(List.of(requestProfileEntity.getOrigin()));
@@ -205,7 +216,7 @@ public class RoutesServiceImpl implements RoutesService {
                     throw new RuntimeException("No waypoints available");
                 }
 
-                List<LatLng> selectedWaypoints = selectWaypoints(waypointCandidates, NUMBER_OF_RESULTS);
+                List<LatLng> selectedWaypoints = selectRandomWaypoints(waypointCandidates, NUMBER_OF_RESULTS);
                 for (LatLng waypoint : selectedWaypoints) {
                     RouteRequestProfileEntity copiedProfileEntity = new RouteRequestProfileEntity();
                     copiedProfileEntity.setTargetTime(requestProfileEntity.getTargetTime());
@@ -249,11 +260,44 @@ public class RoutesServiceImpl implements RoutesService {
         return result;
     }
 
+    private void optimizeDistanceFactor(RouteRequestProfileEntity profile, int numberOfSamples) {
+        RegionalRouteApiService apiService = choiceApiService(profile.getOrigin());
+
+        List<LatLng> samples = new ArrayList<>();
+        if (profile.getCreatedWaypointCandidates().size() <= numberOfSamples) {
+            samples = new ArrayList<>(profile.getCreatedWaypointCandidates());
+        }
+        if (profile.getCreatedWaypointCandidates().size() > numberOfSamples) {
+            samples = selectUniformWaypoints(profile.getCreatedWaypointCandidates(), numberOfSamples);
+        }
+
+        int sumOfTimeOfSamples = 0;
+        for (LatLng sample : samples) {
+            RouteRequestProfileEntity copiedProfileEntity = new RouteRequestProfileEntity();
+            copiedProfileEntity.setTargetTime(profile.getTargetTime());
+            copiedProfileEntity.setOrigin(profile.getOrigin().clone());
+            copiedProfileEntity.setStartCloseWaypoints(LatLng.deepCopyList(profile.getStartCloseWaypoints()));
+            copiedProfileEntity.setEndCloseWaypoints(LatLng.deepCopyList(profile.getEndCloseWaypoints()));
+            copiedProfileEntity.getStartCloseWaypoints().add(sample);
+
+            try {
+                RouteEntity route = buildRouteFromParsedResponse(sample, apiService.getParsedApiResponse(copiedProfileEntity));
+                route.setTotalTimeSeconds(getPersonalRequiredTime(route.getTotalDistanceMeters(), profile.getWalkSpeed()));
+                sumOfTimeOfSamples += route.getTotalTimeSeconds();
+            } catch (IOException e) {
+                continue;
+            }
+        }
+        double averageTimeOfSamples = (double) sumOfTimeOfSamples / samples.size();
+
+        profile.setDistanceFactor(profile.getDistanceFactor() * (profile.getTargetTime() / averageTimeOfSamples));
+    }
+
     private double calculateDifferenceRatio(double standard, double value) {
         return Math.abs(standard - value) / standard;
     }
 
-    private List<LatLng> selectWaypoints(List<LatLng> waypoints, int number) {
+    private List<LatLng> selectRandomWaypoints(List<LatLng> waypoints, int number) {
         if (waypoints.size() <= number) {
             return new ArrayList<>(waypoints);
         }
@@ -262,6 +306,19 @@ public class RoutesServiceImpl implements RoutesService {
         Collections.shuffle(shuffledWaypoints);
 
         List<LatLng> selectedWaypoints = new ArrayList<>(shuffledWaypoints.subList(0, number));
+        return selectedWaypoints;
+    }
+
+    private List<LatLng> selectUniformWaypoints(List<LatLng> waypoints, int number) {
+        if (waypoints.size() <= number) {
+            return new ArrayList<>(waypoints);
+        }
+
+        List<LatLng> selectedWaypoints = new ArrayList<>();
+        int interval = waypoints.size() / number;
+        for (int i = 0; i < number; i++) {
+            selectedWaypoints.add(waypoints.get(i * interval));
+        }
         return selectedWaypoints;
     }
 
