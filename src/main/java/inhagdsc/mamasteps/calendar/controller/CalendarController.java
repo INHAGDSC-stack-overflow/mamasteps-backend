@@ -96,7 +96,7 @@ public class CalendarController {
     @DeleteMapping("/deleteRecord/{recordId}")
     public ApiResponse<Void> deleteRecord(@AuthenticationPrincipal User user, @PathVariable Long recordId) {
         try {
-            calendarService.deleteSchedule(user.getId(), recordId);
+            calendarService.deleteRecord(user, recordId);
             return ApiResponse.onSuccess(OK, null);
         } catch (Exception e) {
             return ApiResponse.onFailure(FORBIDDEN.getCode(), e.getMessage(), null);
