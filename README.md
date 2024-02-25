@@ -4,7 +4,7 @@
 
 Project to participate in 2024 google solution challenge
 
-# Member
+# Backend-member
 |Jaegyeong Han|Sungkyu Shin|Gyuhyeok Hwang|
 |:-:|:-:|:-:|
 |-lead, backend|-backend|-backend|
