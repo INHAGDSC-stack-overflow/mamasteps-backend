@@ -24,7 +24,7 @@ public class TmapApiService implements RegionalRouteApiService{
     private String tmapApiKey;
 
     private final WebClient webClient;
-    private static final Logger logger = LoggerFactory.getLogger(GoogleApiService.class);
+    private static final Logger logger = LoggerFactory.getLogger(TmapApiService.class);
     private static long requestCount = 0;
 
     public TmapApiService(Environment env, WebClient.Builder webClientBuilder) {
