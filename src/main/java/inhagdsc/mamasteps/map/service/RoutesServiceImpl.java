@@ -20,11 +20,8 @@ import inhagdsc.mamasteps.user.entity.User;
 import inhagdsc.mamasteps.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.RouteMatcher;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -37,24 +34,24 @@ public class RoutesServiceImpl implements RoutesService {
     private int NUMBER_OF_RESULTS;
     @Value("${DISTANCE_FACTOR_OPTIMIZE-NUMBER_OF_SAMPLES}")
     private int NUMBER_OF_SAMPLES;
-    private final Environment env;
-    private final WebClient.Builder webClientBuilder;
     private final WaypointGenerator waypointGenerator;
     private final RouteRepository routeRepository;
     private final ComputingRouteRepository computingRouteRepository;
     private final RouteRequestProfileRepository routeRequestProfileRepository;
     private final UserRepository userRepository;
+    private final GoogleApiService googleApiService;
+    private final TmapApiService tmapApiService;
     private final PolylineEncoder polylineEncoder;
 
     @Autowired
-    public RoutesServiceImpl(Environment env, WebClient.Builder webClientBuilder, WaypointGenerator waypointGenerator, RouteRepository routeRepository, ComputingRouteRepository computingRouteRepository, RouteRequestProfileRepository routeRequestProfileRepository, UserRepository userRepository, PolylineEncoder polylineEncoder) {
-        this.env = env;
-        this.webClientBuilder = webClientBuilder;
+    public RoutesServiceImpl(WaypointGenerator waypointGenerator, RouteRepository routeRepository, ComputingRouteRepository computingRouteRepository, RouteRequestProfileRepository routeRequestProfileRepository, UserRepository userRepository, GoogleApiService googleApiService, TmapApiService tmapApiService, PolylineEncoder polylineEncoder) {
         this.waypointGenerator = waypointGenerator;
         this.routeRepository = routeRepository;
         this.computingRouteRepository = computingRouteRepository;
         this.routeRequestProfileRepository = routeRequestProfileRepository;
         this.userRepository = userRepository;
+        this.googleApiService = googleApiService;
+        this.tmapApiService = tmapApiService;
         this.polylineEncoder = polylineEncoder;
     }
 
@@ -360,9 +357,9 @@ public class RoutesServiceImpl implements RoutesService {
 
     private RegionalRouteApiService choiceApiService(LatLng origin) {
         if ((origin.getLatitude() > 33 && origin.getLatitude() < 39) && (origin.getLongitude() > 124 && origin.getLongitude() < 132)) {
-            return new TmapApiService(env, webClientBuilder);
+            return tmapApiService;
         } else {
-            return new GoogleApiService(env, webClientBuilder);
+            return googleApiService;
         }
     }
 
