@@ -11,7 +11,9 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
@@ -19,6 +21,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+@Component
 public class GoogleApiService implements RegionalRouteApiService{
     private String googleApiKey;
     private String REQUEST_FIELDMASK;
@@ -26,6 +29,7 @@ public class GoogleApiService implements RegionalRouteApiService{
     private static final Logger logger = LoggerFactory.getLogger(GoogleApiService.class);
     private static long requestCount = 0;
 
+    @Autowired
     public GoogleApiService(Environment env, WebClient.Builder webClientBuilder) {
         this.googleApiKey = env.getProperty("GOOGLE_API_KEY");
         this.REQUEST_FIELDMASK = env.getProperty("REQUEST_FIELDMASK");

@@ -8,8 +8,10 @@ import inhagdsc.mamasteps.map.domain.LatLng;
 import inhagdsc.mamasteps.map.domain.RouteRequestProfileEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -19,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Component
 public class TmapApiService implements RegionalRouteApiService{
     @Value("${TMAP_API_KEY}")
     private String tmapApiKey;
@@ -27,6 +30,7 @@ public class TmapApiService implements RegionalRouteApiService{
     private static final Logger logger = LoggerFactory.getLogger(TmapApiService.class);
     private static long requestCount = 0;
 
+    @Autowired
     public TmapApiService(Environment env, WebClient.Builder webClientBuilder) {
         this.tmapApiKey = env.getProperty("TMAP_API_KEY");
         this.webClient = webClientBuilder.baseUrl("https://apis.openapi.sk.com").build();
